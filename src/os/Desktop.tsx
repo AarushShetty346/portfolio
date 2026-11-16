@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
-import { APPS, openApp } from './apps'
+import { APPS, openApp, openProject, resolveApp } from './apps'
 import { DesktopSurface } from './DesktopSurface'
 import { Dock } from './Dock'
 import { Launcher } from './Launcher'
-import { notify, useNotices, useShell, useWM } from './store'
+import { notify, useFocusedId, useNotices, useShell, useWM } from './store'
 import { TopBar } from './TopBar'
 import { Wallpaper } from './Wallpaper'
 import { WindowFrame } from './Window'
@@ -101,6 +101,23 @@ export function Desktop() {
   const windows = useWM((s) => s.windows)
   const launcher = useShell((s) => s.launcher)
   useShortcuts()
+
+  // Shareable links: /#project=astflow or /#app=github open straight into that app.
+  useEffect(() => {
+    const params = new URLSearchParams(location.hash.slice(1))
+    const project = params.get('project')
+    const app = params.get('app')
+    if (project) openProject(project)
+    else if (app) openApp(app)
+  }, [])
+
+  // The browser tab is named after the focused app.
+  const focusedId = useFocusedId()
+  useEffect(() => {
+    const win = windows.find((w) => w.id === focusedId)
+    const title = win && resolveApp(win)?.title
+    document.title = title ? `${title} - AARUSH.OS` : 'AARUSH.OS'
+  }, [focusedId, windows])
 
   useEffect(() => {
     if (sessionStorage.getItem('aarush-os:welcomed')) return
