@@ -229,7 +229,7 @@ Next steps I have in mind: real historical candle data, a move to Vite, and a be
     shots: [
       { src: './shots/shikshak-check.jpg', caption: 'Handwritten working, checked line by line' },
       { src: './shots/shikshak-explain.jpg', caption: 'The tutor explains on the board' },
-      { src: './shots/shikshak-report.jpg', caption: 'Today's class report' },
+      { src: './shots/shikshak-report.jpg', caption: 'Class report for the day' },
       { src: './shots/shikshak-home.jpg', caption: 'Start screen' },
       { src: './shots/shikshak-onboarding.jpg', caption: 'Learner setup' },
     ],
