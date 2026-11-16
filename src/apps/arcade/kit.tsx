@@ -1,17 +1,24 @@
-import { useEffect, useRef, type ReactNode } from 'react'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-/* Shared pieces for the arcade games. */
+/* Shared pieces for the arcade games.
+   Every game fills the space it is given: it measures its stage, then
+   lays out as many cells as fit, so the field is wide on a laptop and
+   tall on a phone. */
+
+export type HudItem = [label: string, value: string | number]
 
 export interface GameProps {
   /** Best result this session, if any. */
   best?: number
   /** Report a finished game's result. */
   submit: (score: number) => void
+  /** Show these numbers in the corner of the game. */
+  hud: (items: HudItem[]) => void
 }
 
 export type Dir = 'up' | 'down' | 'left' | 'right'
 export const DELTA: Record<Dir, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }
+export const OPPOSITE: Record<Dir, Dir> = { up: 'down', down: 'up', left: 'right', right: 'left' }
 
 const KEYS: Record<string, Dir> = {
   ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
@@ -19,77 +26,82 @@ const KEYS: Record<string, Dir> = {
 }
 export const dirFromKey = (key: string): Dir | undefined => KEYS[key.length === 1 ? key.toLowerCase() : key]
 
-/** A focusable stage that takes the keyboard while the game is open. */
-export function Stage({ onKey, children }: { onKey: (e: React.KeyboardEvent) => void; children: ReactNode }) {
+export interface Area { w: number; h: number }
+
+/** What a game wants to hear about. It fills this in on every render. */
+export interface Input { dir?: (d: Dir) => void; go?: () => void; key?: (key: string) => void }
+
+/**
+ * The play area: takes the keyboard, turns swipes into directions, and
+ * reports its own size so the game can decide how many cells fit.
+ */
+export function Stage({ children }: { children: (area: Area, input: React.RefObject<Input>) => ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => ref.current?.focus(), [])
+  const input = useRef<Input>({})
+  const [area, setArea] = useState<Area>({ w: 0, h: 0 })
+  const touch = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    const el = ref.current!
+    el.focus()
+    const ro = new ResizeObserver(() => setArea({ w: Math.floor(el.clientWidth), h: Math.floor(el.clientHeight) }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   return (
     <div
       ref={ref}
       tabIndex={0}
       onKeyDown={(e) => {
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault()
-        onKey(e)
+        const d = dirFromKey(e.key)
+        if (d) input.current.dir?.(d)
+        else if (e.key === 'Enter') input.current.go?.()
+        else input.current.key?.(e.key)
       }}
-      onPointerDown={() => ref.current?.focus()}
-      className="no-ring flex h-full min-h-0 flex-col items-center gap-3"
+      onPointerDown={(e) => {
+        ref.current?.focus()
+        if (e.pointerType !== 'mouse') touch.current = { x: e.clientX, y: e.clientY }
+      }}
+      onPointerUp={(e) => {
+        const t = touch.current
+        touch.current = null
+        if (!t) return
+        const dx = e.clientX - t.x, dy = e.clientY - t.y
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) return input.current.go?.()
+        input.current.dir?.(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up')
+      }}
+      className="no-ring relative grid size-full touch-none place-items-center overflow-hidden"
     >
-      {children}
+      {area.w > 0 && children(area, input)}
     </div>
   )
 }
 
-export function Hud({ items }: { items: [string, string | number][] }) {
-  return (
-    <div className="flex shrink-0 items-stretch gap-2">
-      {items.map(([k, v]) => (
-        <div key={k} className="glass-card min-w-[72px] px-3 py-1.5 text-center">
-          <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink/50">{k}</div>
-          <div className="display mt-0.5 text-[15px] tabular-nums text-ink">{v}</div>
-        </div>
-      ))}
-    </div>
-  )
+/** Sizes a canvas for sharp drawing and returns its context, in CSS pixels. */
+export function prep(canvas: HTMLCanvasElement | null, w: number, h: number) {
+  if (!canvas) return null
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr)
+    canvas.height = Math.round(h * dpr)
+  }
+  const c = canvas.getContext('2d')!
+  c.setTransform(dpr, 0, 0, dpr, 0, 0)
+  return c
 }
 
-/** The canvas keeps its shape and fills whatever height is left. */
-export function Board({ canvas, w, h, overlay }: { canvas: React.RefObject<HTMLCanvasElement | null>; w: number; h: number; overlay?: ReactNode }) {
-  return (
-    <div className="grid min-h-0 w-full flex-1 place-items-center [container-type:size]">
-      <div className="relative" style={{ width: `min(100cqw, calc(100cqh * ${w / h}))`, aspectRatio: `${w} / ${h}` }}>
-        <canvas ref={canvas} width={w} height={h} className="size-full rounded-[10px] border border-white/12 bg-[#06070c]" />
-        {overlay}
-      </div>
-    </div>
-  )
-}
+export const touchDevice = () => window.matchMedia('(pointer: coarse)').matches
 
 export function Overlay({ title, note, action, onAction }: { title: string; note?: string; action: string; onAction: () => void }) {
   return (
-    <div className="absolute inset-0 grid place-items-center rounded-[10px] bg-[#05060a]/80 p-4 text-center backdrop-blur-[2px]">
+    <div className="absolute inset-0 z-10 grid place-items-center bg-[#05060a]/75 p-4 text-center backdrop-blur-[3px]">
       <div>
-        <div className="display text-[20px] font-semibold text-ink">{title}</div>
-        {note && <div className="mt-1.5 text-[12.5px] leading-snug text-ink/65">{note}</div>}
-        <button className="btn btn-accent mt-4" onClick={onAction}>{action}</button>
+        <div className="display text-[26px] font-semibold text-ink">{title}</div>
+        {note && <div className="mx-auto mt-2 max-w-[38ch] text-[13px] leading-snug text-ink/70">{note}</div>}
+        <button className="btn btn-accent mt-5 !h-10 !px-6" onClick={onAction}>{action}</button>
       </div>
-    </div>
-  )
-}
-
-/** On-screen arrows, so the games also work on a phone. */
-export function Pad({ onDir, extra }: { onDir: (d: Dir) => void; extra?: ReactNode }) {
-  const key = (d: Dir, icon: ReactNode, cls: string) => (
-    <button aria-label={d} onPointerDown={(e) => { e.preventDefault(); onDir(d) }} className={`win-key !h-9 !w-11 ${cls}`}>{icon}</button>
-  )
-  return (
-    <div className="flex shrink-0 items-center gap-4">
-      <div className="grid grid-cols-3 gap-1">
-        {key('up', <ArrowUp size={15} />, 'col-start-2')}
-        {key('left', <ArrowLeft size={15} />, 'col-start-1 row-start-2')}
-        {key('down', <ArrowDown size={15} />, 'col-start-2 row-start-2')}
-        {key('right', <ArrowRight size={15} />, 'col-start-3 row-start-2')}
-      </div>
-      {extra}
     </div>
   )
 }

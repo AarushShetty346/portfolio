@@ -1,11 +1,14 @@
 import { lazy, Suspense, useCallback, useState, type ComponentType, type LazyExoticComponent } from 'react'
 import { motion } from 'motion/react'
 import { ArrowLeft, Bomb, Bug, Layers, Trophy, Worm, type LucideIcon } from 'lucide-react'
-import type { GameProps } from './arcade/kit'
+import type { AppProps } from '../os/apps'
+import { useWM } from '../os/store'
+import type { GameProps, HudItem } from './arcade/kit'
 
 /* ------------------------------------------------------------------
-   ARCADE: four small games. Best results are kept only in memory, so
-   they last until the page is closed or reloaded.
+   ARCADE: four small games. Starting one takes the window fullscreen
+   and the game fills it. Best results are kept only in memory, so they
+   last until the page is closed or reloaded.
 ------------------------------------------------------------------- */
 
 interface GameDef {
@@ -23,16 +26,17 @@ interface GameDef {
 const GAMES: GameDef[] = [
   { id: 'blockfall', name: 'Blockfall', blurb: 'Falling blocks. Fill a row to clear it.', icon: Layers, color: '#3ee6ff', unit: 'pts', component: lazy(() => import('./arcade/Blockfall')) },
   { id: 'snake', name: 'Snake', blurb: 'Eat, grow, and do not bite yourself.', icon: Worm, color: '#5dffa8', unit: 'eaten', component: lazy(() => import('./arcade/Snake')) },
-  { id: 'mines', name: 'Minesweeper', blurb: 'Nine by nine, ten mines, fastest clear wins.', icon: Bomb, color: '#ff5c7a', unit: 's', lowerIsBetter: true, component: lazy(() => import('./arcade/Mines')) },
+  { id: 'mines', name: 'Minesweeper', blurb: 'A board cut to your screen. Fastest clear wins.', icon: Bomb, color: '#ff5c7a', unit: 's', lowerIsBetter: true, component: lazy(() => import('./arcade/Mines')) },
   { id: 'maze', name: 'Glitch Run', blurb: 'A maze chase. Collect the bits, dodge the bugs.', icon: Bug, color: '#ffb657', unit: 'pts', component: lazy(() => import('./arcade/Maze')) },
 ]
 
 // lives for the session only, by design
 const best: Record<string, number> = {}
 
-export default function Arcade() {
+export default function Arcade({ win }: AppProps) {
   const [open, setOpen] = useState<string | null>(null)
   const [, bump] = useState(0)
+  const [hudItems, setHudItems] = useState<HudItem[]>([])
   const game = GAMES.find((g) => g.id === open)
 
   const submit = useCallback((score: number) => {
@@ -42,20 +46,39 @@ export default function Arcade() {
     if (prev === undefined || (g.lowerIsBetter ? score < prev : score > prev)) { best[g.id] = score; bump((n) => n + 1) }
   }, [open])
 
+  const hud = useCallback((items: HudItem[]) => {
+    setHudItems((prev) => (JSON.stringify(prev) === JSON.stringify(items) ? prev : items))
+  }, [])
+
+  const play = (id: string) => {
+    // a game gets the whole screen
+    const w = useWM.getState().windows.find((x) => x.id === win.id)
+    if (w && !w.maximized) useWM.getState().toggleMaximize(win.id)
+    setHudItems([])
+    setOpen(id)
+  }
+
   if (game) {
     const Game = game.component
     return (
-      <div className="flex h-full flex-col" style={{ ['--accent' as string]: game.color }}>
-        <div className="flex h-11 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-black/25 px-3">
-          <button className="win-key !h-7 !w-8" aria-label="All games" onClick={() => setOpen(null)}><ArrowLeft size={14} /></button>
-          <game.icon size={15} className="text-accent" />
-          <span className="text-[13px] font-semibold text-ink">{game.name}</span>
-          <span className="ml-auto hidden font-mono text-[10px] uppercase tracking-[0.12em] text-faint @md/win:inline">High scores reset when you leave the site</span>
-        </div>
-        <div className="min-h-0 flex-1 p-4">
-          <Suspense fallback={<div className="skeleton h-full" />}>
-            <Game best={best[game.id]} submit={submit} />
+      <div className="relative size-full bg-[#06070c]" style={{ ['--accent' as string]: game.color }}>
+        <div className="absolute inset-x-0 bottom-0 top-8">
+          <Suspense fallback={<div className="skeleton size-full" />}>
+            <Game best={best[game.id]} submit={submit} hud={hud} />
           </Suspense>
+        </div>
+        {/* one slim line: the way back on the left, the numbers on the right */}
+        <div className="absolute inset-x-0 top-0 flex h-8 items-center gap-2.5 px-2">
+          <button className="flex h-6 items-center gap-1.5 rounded-md px-1.5 text-[12px] text-ink/70 transition-colors hover:bg-white/10 hover:text-ink" onClick={() => setOpen(null)}>
+            <ArrowLeft size={13} /> {game.name}
+          </button>
+          <div className="ml-auto flex items-center gap-3.5 pr-1 font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink/50">
+            {hudItems.map(([k, v]) => (
+              <span key={k}>
+                {k} <span className={k === 'Best' ? 'text-accent' : 'text-ink'} style={{ fontSize: 12.5 }}>{v}</span>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -65,8 +88,8 @@ export default function Arcade() {
     <div className="os-scroll h-full px-5 py-6 @2xl/win:px-8 @2xl/win:py-8">
       <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink/55">Insert coin</div>
       <h1 className="display mt-3 text-[28px] font-semibold leading-none text-ink">Arcade</h1>
-      <p className="mt-2.5 max-w-[52ch] text-[13.5px] leading-relaxed text-ink/65">
-        Four small games, all playable with the arrow keys or the on-screen pad. High scores last until you close the site.
+      <p className="mt-2.5 max-w-[56ch] text-[13.5px] leading-relaxed text-ink/65">
+        Four small games. Each one opens fullscreen and sizes its field to your screen. High scores last until you close the site.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-3 @xl/win:grid-cols-2">
@@ -76,7 +99,7 @@ export default function Arcade() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 + i * 0.06, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            onClick={() => setOpen(g.id)}
+            onClick={() => play(g.id)}
             className="group relative flex items-center gap-4 overflow-hidden rounded-[14px] border border-white/[0.09] bg-black/25 p-4 text-left transition-colors hover:border-white/20"
           >
             <span

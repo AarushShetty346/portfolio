@@ -1,30 +1,41 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bomb, Flag } from 'lucide-react'
 import { cn } from '../../os/icons'
-import { Hud, type GameProps } from './kit'
+import { Stage, touchDevice, type Area, type GameProps } from './kit'
 
-const N = 9
-const MINES = 10
 interface Cell { mine: boolean; open: boolean; flag: boolean; near: number }
 const COLORS = ['', '#5b9dff', '#5dffa8', '#ff5c7a', '#b07cff', '#ffb657', '#3ee6ff', '#e9edf5', '#9099ad']
 
-const blank = (): Cell[] => Array.from({ length: N * N }, () => ({ mine: false, open: false, flag: false, near: 0 }))
-const around = (i: number) => {
-  const x = i % N, y = Math.floor(i / N), out: number[] = []
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-    const nx = x + dx, ny = y + dy
-    if ((dx || dy) && nx >= 0 && ny >= 0 && nx < N && ny < N) out.push(ny * N + nx)
-  }
-  return out
-}
+/** Minesweeper on a board cut to fit the window. Best result is the fastest clear, in seconds. */
+function Field({ area, best, submit, hud }: GameProps & { area: Area }) {
+  const target = area.w < 520 ? 34 : 44
+  const cols = Math.max(8, Math.min(30, Math.floor(area.w / target)))
+  const BAR = 46 // the controls sit under the board, so they never cover a square
+  const rows = Math.max(8, Math.min(16, Math.floor((area.h - BAR) / target)))
+  const cell = Math.floor(Math.min(area.w / cols, (area.h - BAR) / rows))
+  const total = cols * rows
+  const MINES = Math.round(total * 0.15)
 
-/** Minesweeper: best result is the fastest clear, in seconds. */
-export default function Mines({ best, submit }: GameProps) {
+  const blank = (): Cell[] => Array.from({ length: total }, () => ({ mine: false, open: false, flag: false, near: 0 }))
+  const around = (i: number) => {
+    const x = i % cols, y = Math.floor(i / cols), out: number[] = []
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, ny = y + dy
+      if ((dx || dy) && nx >= 0 && ny >= 0 && nx < cols && ny < rows) out.push(ny * cols + nx)
+    }
+    return out
+  }
+
   const [cells, setCells] = useState<Cell[]>(blank)
   const [phase, setPhase] = useState<'ready' | 'playing' | 'won' | 'lost'>('ready')
   const [flagMode, setFlagMode] = useState(false)
   const [secs, setSecs] = useState(0)
   const began = useRef(0)
+  const hold = useRef<number | undefined>(undefined)
+  const held = useRef(false)
+
+  const reset = () => { setCells(blank()); setPhase('ready'); setSecs(0) }
+  useEffect(reset, [cols, rows]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (phase !== 'playing') return
@@ -32,17 +43,18 @@ export default function Mines({ best, submit }: GameProps) {
     return () => window.clearInterval(t)
   }, [phase])
 
-  const reset = () => { setCells(blank()); setPhase('ready'); setSecs(0) }
+  const flags = cells.filter((c) => c.flag).length
+  useEffect(() => { hud([['Mines', MINES - flags], ['Time', `${secs}s`], ['Best', best ? `${best}s` : '-']]) }, [flags, secs, best, MINES, hud])
 
   const open = (i: number) => {
-    if (phase === 'won' || phase === 'lost') return
+    if (phase === 'won' || phase === 'lost' || cells.length !== total) return
     let next = cells.map((c) => ({ ...c }))
     if (phase === 'ready') {
       // mines are laid after the first click, so it is always safe
       const safe = new Set([i, ...around(i)])
       let left = MINES
       while (left) {
-        const k = Math.floor(Math.random() * N * N)
+        const k = Math.floor(Math.random() * total)
         if (!safe.has(k) && !next[k].mine) { next[k].mine = true; left-- }
       }
       next = next.map((c, k) => ({ ...c, near: around(k).filter((a) => next[a].mine).length }))
@@ -73,52 +85,61 @@ export default function Mines({ best, submit }: GameProps) {
   }
 
   const flag = (i: number) => {
-    if (phase !== 'playing' && phase !== 'ready') return
-    if (cells[i].open) return
+    if ((phase !== 'playing' && phase !== 'ready') || cells[i]?.open) return
     setCells(cells.map((c, k) => (k === i ? { ...c, flag: !c.flag } : c)))
   }
 
-  const flags = cells.filter((c) => c.flag).length
+  if (cells.length !== total) return null
+  const done = phase === 'won' || phase === 'lost'
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center gap-3">
-      <Hud items={[['Mines', MINES - flags], ['Time', `${secs}s`], ['Best', best ? `${best}s` : '-']]} />
-      <div className="grid min-h-0 w-full flex-1 place-items-center [container-type:size]">
-        <div className="relative aspect-square" style={{ width: 'min(100cqw, 100cqh, 520px)' }}>
-          <div className="grid size-full grid-cols-9 gap-[3px] rounded-[10px] border border-white/12 bg-[#06070c] p-2">
-            {cells.map((c, i) => (
-              <button
-                key={i}
-                aria-label={c.open ? (c.mine ? 'mine' : `${c.near} nearby`) : c.flag ? 'flagged' : 'hidden'}
-                onClick={() => (flagMode ? flag(i) : open(i))}
-                onContextMenu={(e) => { e.preventDefault(); flag(i) }}
-                className={cn(
-                  'grid place-items-center rounded-[5px] text-[clamp(11px,3.4cqmin,17px)] font-semibold transition-colors',
-                  c.open ? (c.mine ? 'bg-danger/30' : 'bg-white/[0.035]') : 'bg-white/[0.11] hover:bg-white/20',
-                )}
-                style={{ color: COLORS[c.near] }}
-              >
-                {c.open ? (c.mine ? <Bomb size={14} className="text-danger" /> : c.near || '') : c.flag ? <Flag size={13} className="text-accent" /> : ''}
-              </button>
-            ))}
-          </div>
-          {(phase === 'won' || phase === 'lost') && (
-            <div className="absolute inset-x-0 bottom-3 flex justify-center">
-              <div className="glass flex items-center gap-3 rounded-full py-1.5 pl-4 pr-1.5 text-[12.5px] text-ink">
-                {phase === 'won' ? `Cleared in ${secs}s` : 'You hit a mine'}
-                <button className="btn btn-accent !h-7 !text-[12px]" onClick={reset}>Again</button>
-              </div>
-            </div>
-          )}
-        </div>
+    <div style={{ width: cols * cell }}>
+      <div className="grid" style={{ height: rows * cell }}>
+      <div className="grid size-full" style={{ gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gridAutoRows: cell }}>
+        {cells.map((c, i) => (
+          <button
+            key={i}
+            aria-label={c.open ? (c.mine ? 'mine' : `${c.near} nearby`) : c.flag ? 'flagged' : 'hidden'}
+            onClick={() => { if (held.current) { held.current = false; return } if (flagMode) flag(i); else open(i) }}
+            onContextMenu={(e) => { e.preventDefault(); flag(i) }}
+            onPointerDown={(e) => {
+              if (e.pointerType === 'mouse') return
+              held.current = false
+              hold.current = window.setTimeout(() => { held.current = true; flag(i) }, 420)
+            }}
+            onPointerUp={() => window.clearTimeout(hold.current)}
+            onPointerLeave={() => window.clearTimeout(hold.current)}
+            className="p-[1.5px]"
+          >
+            <span
+              className={cn(
+                'grid size-full place-items-center rounded-[6px] font-semibold transition-colors',
+                c.open ? (c.mine ? 'bg-danger/30' : 'bg-white/[0.03]') : 'bg-white/[0.11] hover:bg-white/20',
+              )}
+              style={{ color: COLORS[c.near], fontSize: cell * 0.42 }}
+            >
+              {c.open ? (c.mine ? <Bomb size={cell * 0.42} className="text-danger" /> : c.near || '') : c.flag ? <Flag size={cell * 0.4} className="text-accent" /> : ''}
+            </span>
+          </button>
+        ))}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <button className={cn('btn !h-9', flagMode && '!border-accent !text-accent')} onClick={() => setFlagMode((v) => !v)}>
-          <Flag size={13} /> {flagMode ? 'Flagging' : 'Flag mode'}
-        </button>
-        <button className="btn !h-9" onClick={reset}>New board</button>
-        <span className="hidden font-mono text-[10px] uppercase tracking-[0.1em] text-ink/45 sm:inline">Right-click to flag</span>
+
+      </div>
+      <div className="flex items-center justify-center" style={{ height: BAR }}>
+        <div className="flex items-center gap-2 text-[12.5px] text-ink">
+          {done && <span className="pl-3 pr-1">{phase === 'won' ? `Cleared in ${secs}s` : 'You hit a mine'}</span>}
+          {touchDevice() && !done && (
+            <button className={cn('btn !h-8 !rounded-full', flagMode && '!border-accent !text-accent')} onClick={() => setFlagMode((v) => !v)}>
+              <Flag size={13} /> {flagMode ? 'Flagging' : 'Flag'}
+            </button>
+          )}
+          <button className={cn('btn !h-8 !rounded-full', done && 'btn-accent')} onClick={reset}>{done ? 'Again' : 'New board'}</button>
+        </div>
       </div>
     </div>
   )
+}
+
+export default function Mines(props: GameProps) {
+  return <Stage>{(area) => <Field area={area} {...props} />}</Stage>
 }
