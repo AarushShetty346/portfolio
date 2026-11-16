@@ -32,7 +32,7 @@ const rise = (i: number) => ({
 
 export default function About() {
   return (
-    <div className="os-scroll h-full">
+    <div className="os-scroll @container h-full">
       {/* Identity */}
       <div className="relative overflow-hidden border-b border-line px-8 pb-7 pt-8">
         <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 120% at 0% 0%, color-mix(in oklab, var(--accent-2) 14%, transparent), transparent 70%)' }} />
@@ -50,7 +50,7 @@ export default function About() {
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-[1.35fr_1fr] gap-x-8 gap-y-7 p-8">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-7 p-8 @2xl:grid-cols-[1.35fr_1fr]">
         <motion.div {...rise(1)} className="space-y-7">
           <div>
             <SectionTitle>About</SectionTitle>

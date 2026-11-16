@@ -39,8 +39,8 @@ export default function Contact() {
   }
 
   return (
-    <div className="grid h-full grid-cols-[1fr_1.1fr]">
-      <div className="os-scroll border-r border-line bg-black/20 p-7">
+    <div className="os-scroll @container h-full"><div className="grid min-h-full grid-cols-1 @2xl:grid-cols-[1fr_1.1fr]">
+      <div className="border-line bg-black/20 p-7 @2xl:border-r">
         <h1 className="display text-[26px] font-semibold leading-tight text-ink">Say hello</h1>
         <p className="mt-2 max-w-[34ch] text-[13.5px] leading-relaxed text-dim">
           Internships, projects or a question about something here. Email is the fastest way to reach me.
@@ -97,6 +97,6 @@ export default function Contact() {
           <button type="submit" className="btn btn-accent shrink-0"><Send size={14} /> Compose email</button>
         </div>
       </form>
-    </div>
+    </div></div>
   )
 }

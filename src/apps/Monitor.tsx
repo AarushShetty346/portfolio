@@ -68,6 +68,7 @@ export default function Monitor() {
   const focusedId = useFocusedId()
   const { focus, close } = useWM.getState()
   const clock24 = usePrefs((s) => s.clock24)
+  const wallpaper = usePrefs((s) => s.wallpaper)
   const now = useNow()
   const online = useOnline()
   const fps = useFrameRate()
@@ -78,15 +79,15 @@ export default function Monitor() {
   const lastFps = fps[fps.length - 1]
 
   return (
-    <div className="os-scroll h-full p-6">
-      <div className="grid grid-cols-4 gap-3">
+    <div className="os-scroll @container h-full p-6">
+      <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
         <Stat icon={Timer} label="Session uptime" value={duration(now.getTime() - BOOT_AT)} sub="Since this page loaded" />
         <Stat icon={Globe} label="Local time" value={formatTime(now, clock24)} sub={`${homeTime} for Aarush`} />
         <Stat icon={online ? Wifi : WifiOff} tone={online ? 'text-term' : 'text-danger'} label="Connection" value={online ? 'Online' : 'Offline'} sub={online ? 'Live GitHub data available' : 'Showing saved data'} />
         <Stat icon={AppWindow} label="Windows" value={String(windows.length)} sub={`${windows.filter((w) => w.minimized).length} minimized`} />
       </div>
 
-      <div className="mt-5 grid grid-cols-[1.25fr_1fr] gap-5">
+      <div className="mt-5 grid grid-cols-1 gap-5 @2xl:grid-cols-[1.25fr_1fr]">
         <div>
           <SectionTitle aside={<span className="font-mono text-[10.5px] text-faint">{windows.length} running</span>}>Applications</SectionTitle>
           <div className="space-y-1.5">
@@ -137,7 +138,7 @@ export default function Monitor() {
                 ['Project apps installed', String(projects.length)],
                 ['GitHub responses cached', String(cached.current)],
                 ['Display', `${window.innerWidth} x ${window.innerHeight}`],
-                ['Wallpaper', usePrefs.getState().wallpaper],
+                ['Wallpaper', wallpaper],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">
                   <dt className="text-dim">{k}</dt>
