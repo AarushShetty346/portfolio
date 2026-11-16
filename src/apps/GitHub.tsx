@@ -9,7 +9,6 @@ import { cn, GitHubMark } from '../os/icons'
 import { LanguageBar, SectionTitle } from './shared'
 
 const USER = profile.handle
-type Kind = 'all' | 'source' | 'fork'
 
 function Failure({ message, retry }: { message?: string; retry: () => void }) {
   return (
@@ -125,22 +124,20 @@ function RepoDetail({ repo }: { repo: GhRepo }) {
 
 export default function GitHub() {
   const user = useGh<GhUser>(`/users/${USER}`)
-  const repos = useGh<GhRepo[]>(`/users/${USER}/repos?per_page=100&sort=pushed`)
-  const [kind, setKind] = useState<Kind>('all')
+  const allRepos = useGh<GhRepo[]>(`/users/${USER}/repos?per_page=100&sort=pushed`)
+  // Only original work is listed: forks and the profile README repo are left out.
+  const repos = useMemo(
+    () => ({ ...allRepos, data: allRepos.data?.filter((r) => !r.fork && r.name !== USER) }),
+    [allRepos],
+  )
   const [q, setQ] = useState('')
   const [selected, setSelected] = useState<number | null>(null)
 
   const list = useMemo(() => {
     const term = q.toLowerCase().trim()
     return (repos.data ?? [])
-      .filter(
-        (r) =>
-          (kind === 'all' || (kind === 'fork') === r.fork) &&
-          (!term || `${r.name} ${r.description ?? ''} ${r.language ?? ''}`.toLowerCase().includes(term)),
-      )
-      // the profile README repo is the least interesting place to land
-      .sort((a, b) => Number(a.name === USER) - Number(b.name === USER))
-  }, [repos.data, kind, q])
+      .filter((r) => !term || `${r.name} ${r.description ?? ''} ${r.language ?? ''}`.toLowerCase().includes(term))
+  }, [repos.data, q])
 
   useEffect(() => {
     if (list.length && !list.some((r) => r.id === selected)) setSelected(list[0].id)
@@ -174,7 +171,7 @@ export default function GitHub() {
           </div>
           <div className="mt-3.5 grid grid-cols-3 gap-2">
             {[
-              ['Repos', user.data?.public_repos],
+              ['Repos', repos.data?.length],
               ['Followers', user.data?.followers],
               ['Following', user.data?.following],
             ].map(([k, v]) => (
@@ -203,14 +200,6 @@ export default function GitHub() {
             <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search repositories" placeholder="Search repositories"
               className="w-full bg-transparent text-[12.5px] text-ink outline-none placeholder:text-faint" />
           </label>
-          <div className="flex rounded-lg border border-line p-0.5">
-            {(['all', 'source', 'fork'] as Kind[]).map((k) => (
-              <button key={k} onClick={() => setKind(k)}
-                className={cn('h-6 rounded-md px-2 text-[11.5px] capitalize transition-colors', kind === k ? 'bg-white/10 text-ink' : 'text-faint hover:text-ink')}>
-                {k === 'fork' ? 'Forks' : k === 'source' ? 'Own' : 'All'}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Repo list */}
