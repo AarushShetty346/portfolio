@@ -132,11 +132,14 @@ export default function GitHub() {
 
   const list = useMemo(() => {
     const term = q.toLowerCase().trim()
-    return (repos.data ?? []).filter(
-      (r) =>
-        (kind === 'all' || (kind === 'fork') === r.fork) &&
-        (!term || `${r.name} ${r.description ?? ''} ${r.language ?? ''}`.toLowerCase().includes(term)),
-    )
+    return (repos.data ?? [])
+      .filter(
+        (r) =>
+          (kind === 'all' || (kind === 'fork') === r.fork) &&
+          (!term || `${r.name} ${r.description ?? ''} ${r.language ?? ''}`.toLowerCase().includes(term)),
+      )
+      // the profile README repo is the least interesting place to land
+      .sort((a, b) => Number(a.name === USER) - Number(b.name === USER))
   }, [repos.data, kind, q])
 
   useEffect(() => {
