@@ -104,11 +104,16 @@ export function Desktop() {
 
   // Shareable links: /#project=astflow or /#app=github open straight into that app.
   useEffect(() => {
-    const params = new URLSearchParams(location.hash.slice(1))
-    const project = params.get('project')
-    const app = params.get('app')
-    if (project) openProject(project)
-    else if (app) openApp(app)
+    const follow = () => {
+      const params = new URLSearchParams(location.hash.slice(1))
+      const project = params.get('project')
+      const app = params.get('app')
+      if (project) openProject(project)
+      else if (app) openApp(app)
+    }
+    follow()
+    window.addEventListener('hashchange', follow)
+    return () => window.removeEventListener('hashchange', follow)
   }, [])
 
   // The browser tab is named after the focused app.
