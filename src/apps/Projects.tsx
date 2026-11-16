@@ -1,76 +1,164 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowUpRight, LayoutGrid, List, Play, Radio, Search, Sparkles, Trophy, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Play, Search } from 'lucide-react'
 import { appLabel, categories, projects, type Project } from '../data/projects'
 import { openProject } from '../os/apps'
 import { AppIcon, cn, GitHubMark, glyphFor } from '../os/icons'
-import { Motif } from './shared'
+import { Motif, Shot } from './shared'
 
-type Filter = { key: string; label: string; icon?: LucideIcon; test: (p: Project) => boolean }
-
-const isEvent = (p: Project) => /hackathon|buildathon/i.test(p.context ?? '')
-
-const COLLECTIONS: Filter[] = [
-  { key: 'featured', label: 'Featured', icon: Sparkles, test: (p) => !!p.featured },
-  { key: 'events', label: 'Hackathons', icon: Trophy, test: isEvent },
-  { key: 'live', label: 'Live demos', icon: Radio, test: (p) => !!p.demo },
-]
+/* ------------------------------------------------------------------
+   PROJECTS: a software library, not a grid.
+   Left: the shelf, every project as an installed app.
+   Right: the stage, one project at a time in its own colours, with a
+   live preview, and a way to step to the next one.
+------------------------------------------------------------------- */
 
 const accentVars = (p: Project) => ({ '--accent': p.accent, '--accent-2': p.accent2 }) as CSSProperties
+const ease = [0.16, 1, 0.3, 1] as const
+const pad = (n: number) => String(n).padStart(2, '0')
 
-function Inspector({ p }: { p: Project }) {
+function Stage({ p, index, total, dir, go }: { p: Project; index: number; total: number; dir: number; go: (d: number) => void }) {
+  const [shot, setShot] = useState(0)
+  const shots = p.shots.length ? p.shots : p.hero ? [{ src: p.hero }] : []
+  const current = shots[Math.min(shot, shots.length - 1)]
+  const rise = (i: number) => ({
+    initial: { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { delay: 0.08 + i * 0.05, duration: 0.55, ease },
+  })
+
   return (
     <motion.div
-      key={p.slug}
       style={accentVars(p)}
-      initial={{ opacity: 0, x: 14 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -8 }}
-      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute inset-0 flex flex-col"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="@container absolute inset-0 overflow-hidden"
     >
-      <Motif kind={p.motif} seed={p.slug} className="h-[150px] shrink-0 border-b border-line" />
-      <div className="os-scroll -mt-9 flex-1 px-5 pb-5">
-        <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={68} className="relative ring-4 ring-[#0b0d14]" />
-        <h2 className="mt-4 text-[20px] font-semibold tracking-tight text-ink">{p.name}</h2>
-        <div className="mt-0.5 font-mono text-[11px] tracking-[0.12em] text-accent">{appLabel(p)}</div>
-        <p className="mt-3 text-[13px] leading-relaxed text-dim">{p.tagline}</p>
+      {/* backdrop: the project's generative art, lit in its own colours */}
+      <Motif kind={p.motif} seed={p.slug} className="absolute inset-0 opacity-50" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(70% 80% at 88% 30%, color-mix(in oklab, var(--accent) 20%, transparent), transparent 70%), linear-gradient(90deg, #090b12 0%, rgb(9 11 18 / 0.92) 34%, rgb(9 11 18 / 0.35) 70%, rgb(9 11 18 / 0.6) 100%), linear-gradient(0deg, #090b12 2%, transparent 40%)',
+        }}
+      />
 
-        <div className="mt-5 flex gap-2">
-          <button className="btn btn-accent flex-1 justify-center" onClick={() => openProject(p.slug)}>
-            <Play size={14} fill="currentColor" /> Launch
+      {/* the giant index numeral, half hidden behind everything */}
+      <div
+        aria-hidden
+        className="display pointer-events-none absolute -top-8 right-6 select-none text-[220px] font-semibold leading-none tracking-[-0.04em]"
+        style={{ color: 'transparent', WebkitTextStroke: '1px color-mix(in oklab, var(--accent) 30%, transparent)' }}
+      >
+        {pad(index + 1)}
+      </div>
+
+      {/* preview: the real interface, set at an angle like a product shot */}
+      {current && (
+        <motion.div
+          initial={{ opacity: 0, x: 60 * (dir || 1) }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.75, ease }}
+          className="absolute right-[-9%] top-[11%] hidden w-[66%] @3xl:block"
+          style={{ perspective: 1600, transformStyle: 'preserve-3d' }}
+        >
+          <div
+            className="overflow-hidden rounded-[10px] border border-white/15 bg-[#0b0d14]"
+            style={{
+              transform: 'rotateY(-16deg) rotateX(5deg) rotateZ(1deg)',
+              transformOrigin: '0% 50%',
+              boxShadow: '0 40px 90px -20px rgb(0 0 0 / 0.9), 0 0 80px -30px color-mix(in oklab, var(--accent) 70%, transparent)',
+            }}
+          >
+            <div className="flex h-6 items-center gap-1.5 border-b border-white/10 bg-white/[0.04] px-2.5">
+              <span className="size-1.5 rounded-full bg-white/25" />
+              <span className="size-1.5 rounded-full bg-white/25" />
+              <span className="size-1.5 rounded-full bg-white/25" />
+              <span className="ml-2 truncate font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">{current.caption ?? appLabel(p)}</span>
+            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={current.src} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+                <Shot src={current.src} alt={`${p.name}: ${current.caption ?? 'screenshot'}`} className="aspect-[16/10] w-full" />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      )}
+
+      {/* copy */}
+      <div className="absolute inset-y-0 left-0 flex w-full max-w-[470px] flex-col justify-end p-8 pb-[76px]">
+        <motion.div {...rise(0)} className="flex items-center gap-3">
+          <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={54} />
+          <div>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">{appLabel(p)}</div>
+            <div className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">
+              {pad(index + 1)} / {pad(total)} · {p.category}
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.h2 {...rise(1)} className="display mt-5 text-[46px] font-semibold leading-[0.98] tracking-[-0.015em] text-ink">
+          {p.name}
+        </motion.h2>
+        <motion.p {...rise(2)} className="selectable mt-3.5 max-w-[38ch] text-[15px] leading-relaxed text-ink/75">
+          {p.tagline}
+        </motion.p>
+
+        <motion.div {...rise(3)} className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-dim">
+          {[p.context, p.year].filter(Boolean).map((v, i) => (
+            <span key={v} className="flex items-center gap-3">
+              {i > 0 && <span className="size-[3px] rounded-full bg-white/25" />}
+              {v}
+            </span>
+          ))}
+        </motion.div>
+
+        <motion.div {...rise(4)} className="mt-4 flex flex-wrap gap-1.5">
+          {p.stack.slice(0, 6).map((s) => <span key={s} className="chip">{s}</span>)}
+          {p.stack.length > 6 && <span className="chip">+{p.stack.length - 6}</span>}
+        </motion.div>
+
+        <motion.div {...rise(5)} className="mt-6 flex items-center gap-2">
+          <button className="btn btn-accent !h-10 !px-5" onClick={() => openProject(p.slug)}>
+            <Play size={13} fill="currentColor" /> Launch app
           </button>
+          {p.demo && (
+            <a className="btn !h-10" href={p.demo} target="_blank" rel="noreferrer">Live demo <ArrowUpRight size={14} /></a>
+          )}
           {p.repo && (
-            <a className="btn !px-2.5" href={`https://github.com/${p.repo}`} target="_blank" rel="noreferrer" aria-label="Repository on GitHub" title="Repository">
+            <a className="btn !h-10 !px-3" href={`https://github.com/${p.repo}`} target="_blank" rel="noreferrer" aria-label="Repository on GitHub" title="Repository">
               <GitHubMark size={15} />
             </a>
           )}
-          {p.demo && (
-            <a className="btn !px-2.5" href={p.demo} target="_blank" rel="noreferrer" aria-label="Live demo" title="Live demo">
-              <ArrowUpRight size={15} />
-            </a>
-          )}
-        </div>
+        </motion.div>
+      </div>
 
-        <dl className="mt-6 space-y-2.5 text-[12.5px]">
-          {[
-            ['Category', p.category],
-            ['Context', p.context],
-            ['Year', p.year],
-          ].map(([k, v]) =>
-            v ? (
-              <div key={k} className="flex gap-4">
-                <dt className="w-16 shrink-0 text-faint">{k}</dt>
-                <dd className="text-ink/85">{v}</dd>
-              </div>
-            ) : null,
-          )}
-        </dl>
-
-        <div className="mt-5 flex flex-wrap gap-1.5">
-          {p.stack.map((s) => (
-            <span key={s} className="chip">{s}</span>
-          ))}
+      {/* bottom rail: screenshots on the left, step to the neighbours on the right */}
+      <div className="absolute inset-x-0 bottom-0 flex h-[60px] items-center gap-3 border-t border-white/[0.07] bg-[#090b12]/70 px-8 backdrop-blur-md">
+        {shots.length > 1 && (
+          <div className="hidden items-center gap-1.5 @3xl:flex">
+            {shots.slice(0, 5).map((s, i) => (
+              <button
+                key={s.src}
+                onClick={() => setShot(i)}
+                aria-label={s.caption ?? `Screenshot ${i + 1}`}
+                title={s.caption}
+                className={cn('h-9 w-14 overflow-hidden rounded-[5px] border transition-all', i === shot ? 'border-accent opacity-100' : 'border-white/10 opacity-55 hover:opacity-100')}
+              >
+                <Shot src={s.src} alt="" className="size-full" fallback={<span />} />
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => go(-1)} aria-label="Previous project" className="win-key !h-8 !w-9"><ArrowLeft size={14} /></button>
+          <button onClick={() => go(1)} className="group flex h-8 items-center gap-2.5 rounded-[7px] border border-white/[0.07] bg-white/[0.025] pl-3 pr-2.5 text-[12px] text-dim transition-colors hover:border-white/16 hover:bg-white/10 hover:text-ink">
+            <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint">Next</span>
+            <span className="max-w-32 truncate text-ink/90">{projects[(projects.indexOf(p) + 1) % projects.length].name}</span>
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+          </button>
         </div>
       </div>
     </motion.div>
@@ -78,165 +166,138 @@ function Inspector({ p }: { p: Project }) {
 }
 
 export default function Projects() {
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('All')
   const [q, setQ] = useState('')
-  const [view, setView] = useState<'grid' | 'list'>('grid')
   const [selected, setSelected] = useState(projects[0].slug)
-
-  const filters = useMemo<Filter[]>(
-    () => [
-      { key: 'all', label: 'All apps', test: () => true },
-      ...categories.map((c) => ({ key: c, label: c, test: (p: Project) => p.category === c })),
-    ],
-    [],
-  )
-  const active = [...filters, ...COLLECTIONS].find((f) => f.key === filter)!
+  const [dir, setDir] = useState(1)
+  const list = useRef<HTMLDivElement>(null)
 
   const shown = useMemo(() => {
     const terms = q.toLowerCase().trim().split(/\s+/).filter(Boolean)
     return projects.filter(
       (p) =>
-        active.test(p) &&
+        (filter === 'All' || p.category === filter) &&
         terms.every((t) => `${p.name} ${p.tagline} ${p.stack.join(' ')} ${p.context ?? ''}`.toLowerCase().includes(t)),
     )
-  }, [active, q])
+  }, [filter, q])
 
   const current = projects.find((p) => p.slug === selected) ?? projects[0]
+  const index = projects.indexOf(current)
 
-  const NavButton = ({ f }: { f: Filter }) => {
-    const count = projects.filter(f.test).length
-    const on = filter === f.key
-    return (
-      <button
-        onClick={() => setFilter(f.key)}
-        className={cn(
-          'relative flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors',
-          on ? 'text-ink' : 'text-dim hover:bg-white/5 hover:text-ink',
-        )}
-      >
-        {on && <motion.span layoutId="projects-nav" className="absolute inset-0 rounded-lg bg-white/8" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
-        {f.icon && <f.icon size={14} className={cn('relative', on && 'text-accent')} />}
-        <span className="relative flex-1 truncate">{f.label}</span>
-        <span className="relative font-mono text-[10.5px] text-faint">{count}</span>
-      </button>
-    )
+  const select = (slug: string) => {
+    setDir(projects.findIndex((p) => p.slug === slug) >= index ? 1 : -1)
+    setSelected(slug)
+  }
+  const go = (d: number) => {
+    const pool = shown.length ? shown : projects
+    const i = pool.indexOf(current)
+    const next = pool[(i + d + pool.length) % pool.length] ?? pool[0]
+    setDir(d)
+    setSelected(next.slug)
   }
 
-  return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <aside className="flex w-[196px] shrink-0 flex-col border-r border-line bg-black/20 p-3">
-        <div className="label px-2.5 pb-2 pt-1">Library</div>
-        <div className="space-y-0.5">{filters.map((f) => <NavButton key={f.key} f={f} />)}</div>
-        <div className="label px-2.5 pb-2 pt-5">Collections</div>
-        <div className="space-y-0.5">{COLLECTIONS.map((f) => <NavButton key={f.key} f={f} />)}</div>
-        <div className="mt-auto px-2.5 pb-1 text-[11.5px] leading-relaxed text-faint">
-          {projects.length} apps installed. Double-click one to launch it.
-        </div>
-      </aside>
+  // keep the selected row in view when stepping with the keyboard or the Next button
+  useEffect(() => {
+    list.current?.querySelector(`[data-slug="${selected}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [selected])
 
-      {/* App grid */}
-      <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-[54px] shrink-0 items-center gap-3 border-b border-line px-5">
-          <h1 className="text-[15px] font-semibold tracking-tight">{active.label}</h1>
-          <span className="font-mono text-[11px] text-faint">{shown.length}</span>
-          <label className="ml-auto flex h-8 w-[210px] items-center gap-2 rounded-lg border border-line bg-black/25 px-2.5 focus-within:border-accent/50">
-            <Search size={13} className="text-faint" />
+  return (
+    <div
+      className="flex h-full outline-none"
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if ((e.target as HTMLElement).tagName === 'INPUT') return
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); go(1) }
+        else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
+        else if (e.key === 'Enter') openProject(current.slug)
+      }}
+    >
+      {/* Shelf */}
+      <aside className="flex w-[248px] shrink-0 flex-col border-r border-white/[0.07] bg-black/25">
+        <div className="px-4 pb-3 pt-4">
+          <div className="flex items-baseline justify-between">
+            <h1 className="text-[15px] font-semibold tracking-tight text-ink">Library</h1>
+            <span className="font-mono text-[10.5px] text-faint">{pad(shown.length)} / {pad(projects.length)}</span>
+          </div>
+          <label className="mt-3 flex h-8 items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 transition-colors focus-within:border-accent/50">
+            <Search size={12.5} className="text-faint" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              aria-label="Filter apps"
-              placeholder="Filter by name or tech"
+              aria-label="Filter projects"
+              placeholder="Name or technology"
               className="w-full bg-transparent text-[12.5px] text-ink outline-none placeholder:text-faint"
             />
           </label>
-          <div className="flex rounded-lg border border-line p-0.5">
-            {([['grid', LayoutGrid], ['list', List]] as const).map(([v, Icon]) => (
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {['All', ...categories].map((c) => (
               <button
-                key={v}
-                aria-label={`${v} view`}
-                onClick={() => setView(v)}
-                className={cn('grid h-6 w-7 place-items-center rounded-md transition-colors', view === v ? 'bg-white/10 text-ink' : 'text-faint hover:text-ink')}
+                key={c}
+                onClick={() => setFilter(c)}
+                className={cn(
+                  'h-[22px] rounded-full px-2.5 text-[11px] transition-colors',
+                  filter === c ? 'bg-ink text-[#06070b]' : 'bg-white/[0.05] text-dim hover:bg-white/10 hover:text-ink',
+                )}
               >
-                <Icon size={13} />
+                {c}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="os-scroll flex-1 p-4">
-          {shown.length === 0 ? (
-            <div className="grid h-full place-items-center">
-              <div className="text-center">
-                <Search size={22} className="mx-auto text-faint" />
-                <div className="mt-3 text-[14px] text-ink">No apps match</div>
-                <div className="mt-1 text-[12.5px] text-dim">Try another name, technology or collection.</div>
-                <button className="btn mt-4" onClick={() => { setQ(''); setFilter('all') }}>Show all apps</button>
-              </div>
-            </div>
-          ) : view === 'grid' ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-1.5">
-              {shown.map((p, i) => {
-                const on = p.slug === current.slug
-                return (
-                  <motion.button
-                    key={p.slug}
-                    style={accentVars(p)}
-                    initial={{ opacity: 0, y: 12, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: i * 0.03, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    onClick={() => setSelected(p.slug)}
-                    onDoubleClick={() => openProject(p.slug)}
-                    onKeyDown={(e) => e.key === 'Enter' && openProject(p.slug)}
-                    className={cn(
-                      'group flex flex-col items-center rounded-2xl border px-2 pb-3.5 pt-5 transition-colors duration-200',
-                      on ? 'border-accent/40 bg-accent/10' : 'border-transparent hover:bg-white/5',
-                    )}
-                  >
-                    <span className="transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-105 group-active:scale-95">
-                      <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={72} />
-                    </span>
-                    <span className="mt-3.5 w-full truncate text-[13px] font-medium text-ink">{p.name}</span>
-                    <span className="mt-0.5 w-full truncate font-mono text-[10px] tracking-[0.08em] text-faint">{appLabel(p)}</span>
-                  </motion.button>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {shown.map((p) => {
-                const on = p.slug === current.slug
-                return (
-                  <button
-                    key={p.slug}
-                    style={accentVars(p)}
-                    onClick={() => setSelected(p.slug)}
-                    onDoubleClick={() => openProject(p.slug)}
-                    className={cn(
-                      'flex h-[58px] w-full items-center gap-3.5 rounded-xl border px-3 text-left transition-colors',
-                      on ? 'border-accent/40 bg-accent/10' : 'border-transparent hover:bg-white/5',
-                    )}
-                  >
-                    <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={38} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13.5px] font-medium text-ink">{p.name}</span>
-                      <span className="block truncate text-[12px] text-dim">{p.tagline}</span>
-                    </span>
-                    <span className="chip hidden lg:inline-flex">{p.category}</span>
-                  </button>
-                )
-              })}
+        <div ref={list} className="os-scroll flex-1 px-2 pb-2">
+          {shown.length === 0 && (
+            <div className="px-3 py-10 text-center">
+              <div className="text-[13px] text-ink">Nothing matches</div>
+              <button className="mt-2 text-[12px] text-accent hover:underline" onClick={() => { setQ(''); setFilter('All') }}>Show everything</button>
             </div>
           )}
+          {shown.map((p, i) => {
+            const on = p.slug === current.slug
+            return (
+              <motion.button
+                key={p.slug}
+                data-slug={p.slug}
+                style={accentVars(p)}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.025, duration: 0.4, ease }}
+                onClick={() => select(p.slug)}
+                onDoubleClick={() => openProject(p.slug)}
+                className={cn('group relative flex h-[54px] w-full items-center gap-3 rounded-[10px] px-2.5 text-left transition-colors', !on && 'hover:bg-white/[0.045]')}
+              >
+                {on && (
+                  <motion.span
+                    layoutId="shelf-on"
+                    className="absolute inset-0 rounded-[10px] border border-white/10"
+                    style={{ background: 'linear-gradient(90deg, color-mix(in oklab, var(--accent) 16%, transparent), rgb(255 255 255 / 0.04))' }}
+                    transition={{ type: 'spring', stiffness: 480, damping: 40 }}
+                  />
+                )}
+                <span className={cn('relative transition-transform duration-300', on ? 'scale-100' : 'scale-[0.92] group-hover:scale-100')}>
+                  <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={34} />
+                </span>
+                <span className="relative min-w-0 flex-1">
+                  <span className={cn('block truncate text-[13px] font-medium transition-colors', on ? 'text-ink' : 'text-ink/80')}>{p.name}</span>
+                  <span className="block truncate font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">{p.category}</span>
+                </span>
+                <span className={cn('relative font-mono text-[10px] tabular-nums transition-colors', on ? 'text-accent' : 'text-faint')}>{pad(projects.indexOf(p) + 1)}</span>
+              </motion.button>
+            )
+          })}
         </div>
-      </section>
 
-      {/* Inspector */}
-      <aside className="relative w-[290px] shrink-0 overflow-hidden border-l border-line bg-black/20">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <Inspector p={current} />
-        </AnimatePresence>
+        <div className="border-t border-white/[0.07] px-4 py-2.5 font-mono text-[9.5px] uppercase leading-relaxed tracking-[0.12em] text-faint">
+          Arrow keys to browse. Enter to launch.
+        </div>
       </aside>
+
+      {/* Stage */}
+      <section className="relative min-w-0 flex-1 bg-[#090b12]">
+        <AnimatePresence initial={false}>
+          <Stage key={current.slug} p={current} index={index} total={projects.length} dir={dir} go={go} />
+        </AnimatePresence>
+      </section>
     </div>
   )
 }
