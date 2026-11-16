@@ -145,7 +145,7 @@ export const useFocusedId = () =>
 /* ------------------------------------------------------------------
    Preferences (persisted locally)
 ------------------------------------------------------------------- */
-export type WallpaperId = 'dusk' | 'ridge' | 'grid' | 'city' | 'horizon' | 'flow' | 'aurora' | 'obsidian'
+export type WallpaperId = 'orbit' | 'milkyway' | 'chicago' | 'dusk' | 'ridge' | 'grid' | 'city' | 'horizon' | 'flow' | 'aurora' | 'obsidian'
 export type AccentId = 'cyan' | 'violet' | 'magenta' | 'green' | 'amber'
 
 export const ACCENTS: Record<AccentId, { name: string; value: string; second: string }> = {
@@ -156,7 +156,17 @@ export const ACCENTS: Record<AccentId, { name: string; value: string; second: st
   amber: { name: 'Amber', value: '#ffb657', second: '#ff5fd2' },
 }
 
+/** Photograph wallpapers. All three are public domain (NASA, US National Park Service). */
+export const PHOTOS: Partial<Record<WallpaperId, string>> = {
+  orbit: './wallpapers/orbit.jpg',
+  milkyway: './wallpapers/milkyway.jpg',
+  chicago: './wallpapers/chicago.jpg',
+}
+
 export const WALLPAPERS: Record<WallpaperId, { name: string; note: string }> = {
+  orbit: { name: 'Orbit', note: 'Aurora and city lights from the space station' },
+  milkyway: { name: 'Milky Way', note: 'Night sky over the Rocky Mountains' },
+  chicago: { name: 'Chicago', note: 'The street grid at night, from orbit' },
   dusk: { name: 'Dusk', note: 'Last light, nothing else' },
   ridge: { name: 'Ridgelines', note: 'Slow lines of terrain' },
   grid: { name: 'Dot grid', note: 'Quiet drafting paper' },
@@ -179,7 +189,7 @@ interface Prefs {
 }
 
 const DEFAULT_PREFS = {
-  wallpaper: 'dusk' as WallpaperId,
+  wallpaper: 'orbit' as WallpaperId,
   accent: 'cyan' as AccentId,
   bootOnStart: true,
   clock24: false,
@@ -196,9 +206,9 @@ export const usePrefs = create<Prefs>()(
     }),
     {
       name: 'aarush-os:prefs',
-      version: 3,
-      // v3 made the quieter Dusk wallpaper the default look
-      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'dusk' as WallpaperId }),
+      version: 4,
+      // v4 made a real photograph the default look
+      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'orbit' as WallpaperId }),
     },
   ),
 )

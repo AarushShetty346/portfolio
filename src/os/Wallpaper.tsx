@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ACCENTS, usePrefs, type WallpaperId } from './store'
+import { ACCENTS, PHOTOS, usePrefs, type WallpaperId } from './store'
 
 interface Ctx { c: CanvasRenderingContext2D; w: number; h: number; t: number; a: string; b: string }
 
@@ -372,6 +372,21 @@ function Aurora() {
 }
 
 export function WallpaperArt({ id }: { id: WallpaperId }) {
+  const photo = PHOTOS[id]
+  if (photo)
+    return (
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${photo})` }} />
+        {/* dimmed, and darker on the left, so icon labels and the greeting stay readable */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(90deg, rgb(4 5 10 / 0.74) 0%, rgb(4 5 10 / 0.4) 36%, rgb(4 5 10 / 0.22) 100%), linear-gradient(180deg, rgb(4 5 10 / 0.3), transparent 32%, rgb(4 5 10 / 0.5))',
+          }}
+        />
+      </div>
+    )
   if (id === 'city' || id === 'horizon' || id === 'flow' || id === 'ridge') return <CanvasWallpaper key={id} kind={id} />
   if (id === 'aurora') return <Aurora />
   if (id === 'dusk')

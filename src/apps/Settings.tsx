@@ -4,7 +4,7 @@ import { Check, Info, Keyboard, Palette, RotateCcw, SlidersHorizontal, type Luci
 import { profile } from '../data/profile'
 import { projects } from '../data/projects'
 import { cn, OsMark } from '../os/icons'
-import { ACCENTS, notify, usePrefs, WALLPAPERS, type AccentId, type WallpaperId } from '../os/store'
+import { ACCENTS, notify, PHOTOS, usePrefs, WALLPAPERS, type AccentId, type WallpaperId } from '../os/store'
 
 type Pane = 'appearance' | 'desktop' | 'shortcuts' | 'about'
 const PANES: { id: Pane; label: string; icon: LucideIcon }[] = [
@@ -15,7 +15,14 @@ const PANES: { id: Pane; label: string; icon: LucideIcon }[] = [
 ]
 
 /* Still previews of each wallpaper, drawn with CSS only. */
+const photoPreview = (id: WallpaperId): React.CSSProperties => ({
+  background: `linear-gradient(rgb(4 5 10 / 0.25), rgb(4 5 10 / 0.25)), url(${PHOTOS[id]}) center / cover`,
+})
+
 const PREVIEW: Record<WallpaperId, React.CSSProperties> = {
+  orbit: photoPreview('orbit'),
+  milkyway: photoPreview('milkyway'),
+  chicago: photoPreview('chicago'),
   dusk: {
     background:
       'radial-gradient(120% 60% at 62% 108%, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 62%), linear-gradient(180deg, #04050b 0%, #070919 42%, #100b26 70%, #1a0c2c 100%)',
@@ -150,6 +157,7 @@ export default function Settings() {
                   )
                 })}
               </div>
+              <p className="mt-3 text-[12px] text-faint">Photographs: NASA and the US National Park Service (Jeremy M. White), public domain.</p>
             </Group>
 
             <Group title="Accent colour" bare>

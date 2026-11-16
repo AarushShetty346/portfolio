@@ -107,9 +107,9 @@ function ControlCentre({ phone }: { phone: boolean }) {
               <button
                 key={id}
                 onClick={() => prefs.set('wallpaper', id)}
-                className={cn('h-6 rounded text-[10.5px] capitalize transition-colors', prefs.wallpaper === id ? 'bg-white/12 text-ink' : 'text-faint hover:text-ink')}
+                className={cn('h-6 truncate rounded px-1 text-[10.5px] transition-colors', prefs.wallpaper === id ? 'bg-white/12 text-ink' : 'text-faint hover:text-ink')}
               >
-                {WALLPAPERS[id].name.split(' ').pop()}
+                {WALLPAPERS[id].name}
               </button>
             ))}
           </div>
