@@ -225,8 +225,11 @@ Next steps I have in mind: real historical candle data, a move to Vite, and a be
     repo: 'AarushShetty346/Shikshak',
     demo: 'https://shikshak-o0l8.onrender.com',
     stack: ['TypeScript', 'React', 'Node.js', 'Express', 'WebSockets', 'Bolna', 'Vitest', 'Playwright'],
-    hero: './shots/shikshak-home.jpg',
+    hero: './shots/shikshak-check.jpg',
     shots: [
+      { src: './shots/shikshak-check.jpg', caption: 'Handwritten working, checked line by line' },
+      { src: './shots/shikshak-explain.jpg', caption: 'The tutor explains on the board' },
+      { src: './shots/shikshak-report.jpg', caption: 'Today's class report' },
       { src: './shots/shikshak-home.jpg', caption: 'Start screen' },
       { src: './shots/shikshak-onboarding.jpg', caption: 'Learner setup' },
     ],
@@ -347,8 +350,14 @@ Besides live calls there are scripted demo calls and a mode that checks an uploa
     motif: 'matrix',
     repo: 'AarushShetty346/stock-prediction-app',
     stack: ['Flutter', 'Dart', 'Firebase Auth', 'REST APIs', 'fl_chart'],
-    hero: './shots/stock-predict-home.jpg',
-    shots: [{ src: './shots/stock-predict-home.jpg', caption: 'Watchlist' }],
+    hero: './shots/stock-predict-trio.jpg',
+    shots: [
+      { src: './shots/stock-predict-trio.jpg', caption: 'Price history and the 30-day projection' },
+      { src: './shots/stock-predict-detail.jpg', caption: 'Company detail' },
+      { src: './shots/stock-predict-prediction.jpg', caption: 'Projection' },
+      { src: './shots/stock-predict-home.jpg', caption: 'Watchlist' },
+      { src: './shots/stock-predict-signin.jpg', caption: 'Sign in' },
+    ],
     overview: `Stock Predict is a Flutter mobile app that shows company profiles, closing-price history and a 30-day price projection for US stocks.
 
 I built it as the sole developer during my internship at Applied Cloud Computing in summer 2025, learning Flutter and Dart from scratch along the way, with mentorship from the ACC team.`,
