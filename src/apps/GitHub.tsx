@@ -33,6 +33,95 @@ function Failure({ message, retry }: { message?: string; retry: () => void }) {
   )
 }
 
+/* ---- Contribution graph ----
+   GitHub's own graph needs a signed-in API, so this reads the public
+   contributions feed (the same squares shown on the profile page) and
+   keeps a copy for a few hours. */
+interface Day { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }
+const FEED = `https://github-contributions-api.jogruber.de/v4/${USER}?y=last`
+const FEED_KEY = 'aarush-os:gh:contributions'
+
+function useContributions() {
+  const [state, setState] = useState<{ days: Day[]; total: number } | null | 'error'>(null)
+  useEffect(() => {
+    let alive = true
+    try {
+      const saved = JSON.parse(localStorage.getItem(FEED_KEY) ?? 'null')
+      if (saved && Date.now() - saved.at < 3 * 60 * 60 * 1000) { setState(saved.data); return }
+    } catch { /* ignore a broken cache entry */ }
+    fetch(FEED)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: { total: Record<string, number>; contributions: Day[] }) => {
+        const data = { days: d.contributions, total: Object.values(d.total)[0] ?? 0 }
+        try { localStorage.setItem(FEED_KEY, JSON.stringify({ at: Date.now(), data })) } catch { /* storage full */ }
+        if (alive) setState(data)
+      })
+      .catch(() => alive && setState('error'))
+    return () => { alive = false }
+  }, [])
+  return state
+}
+
+const LEVEL = ['rgb(255 255 255 / 0.06)', 'color-mix(in oklab, var(--color-term) 30%, transparent)', 'color-mix(in oklab, var(--color-term) 52%, transparent)', 'color-mix(in oklab, var(--color-term) 76%, transparent)', 'var(--color-term)']
+
+function ActivityGraph() {
+  const data = useContributions()
+  if (data === 'error') return null
+  // weeks as columns, Sunday at the top, padded so the first column lines up
+  const weeks: (Day | null)[][] = []
+  if (data) {
+    const lead = new Date(data.days[0].date + 'T00:00:00').getDay()
+    const cells: (Day | null)[] = [...Array<null>(lead).fill(null), ...data.days]
+    for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+  }
+  const months = weeks.map((w, i) => {
+    const d = w.find(Boolean)
+    if (!d) return ''
+    const m = new Date(d.date + 'T00:00:00')
+    const prev = weeks[i - 1]?.find(Boolean)
+    return !prev || new Date(prev.date + 'T00:00:00').getMonth() !== m.getMonth() ? m.toLocaleDateString([], { month: 'short' }) : ''
+  })
+
+  return (
+    <div className="shrink-0 border-b border-white/[0.07] bg-black/15 px-5 py-3.5 @2xl/win:px-6">
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="label !text-ink/60">Activity</h3>
+        <span className="font-mono text-[10.5px] text-faint">
+          {data ? `${data.total.toLocaleString()} contributions in the last year` : 'loading'}
+        </span>
+      </div>
+      {data ? (
+        <div className="os-scroll mt-2.5 [scrollbar-width:none]" dir="rtl">
+          <div className="inline-block" dir="ltr">
+            <div className="flex gap-[3px] pb-1 font-mono text-[9px] text-faint">
+              {months.map((m, i) => <span key={i} className="w-[10px] shrink-0 overflow-visible whitespace-nowrap">{m}</span>)}
+            </div>
+            <div className="flex gap-[3px]">
+              {weeks.map((w, i) => (
+                <div key={i} className="flex flex-col gap-[3px]">
+                  {Array.from({ length: 7 }, (_, j) => {
+                    const d = w[j]
+                    return (
+                      <span
+                        key={j}
+                        title={d ? `${d.count} on ${new Date(d.date + 'T00:00:00').toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}` : undefined}
+                        className="size-[10px] rounded-[2.5px]"
+                        style={{ background: d ? LEVEL[d.level] : 'transparent' }}
+                      />
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="skeleton mt-2.5 h-[104px]" />
+      )}
+    </div>
+  )
+}
+
 const Heading = ({ children, aside }: { children: string; aside?: string }) => (
   <div className="flex items-baseline justify-between border-b border-white/[0.07] pb-2">
     <h3 className="label !text-ink/60">{children}</h3>
@@ -234,6 +323,8 @@ export default function GitHub() {
           )}
         </div>
       </header>
+
+      <ActivityGraph />
 
       <div className="flex min-h-0 flex-1">
         {/* Repository index */}
