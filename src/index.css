@@ -1,0 +1,219 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/oxanium";
+
+/* ------------------------------------------------------------------
+   AARUSH.OS design tokens
+   One accent (user-selectable, --accent) plus a fixed secondary.
+   Project windows override --accent locally to get their own identity.
+------------------------------------------------------------------- */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+  --font-display: "Oxanium Variable", "Geist Variable", ui-sans-serif, sans-serif;
+
+  --color-void: #05060a;
+  --color-obsidian: #090a10;
+  --color-panel: #0e1018;
+  --color-raised: #141722;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-ink: #e9edf5;
+  --color-dim: #9099ad;
+  --color-faint: #5a6276;
+
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-term: #5dffa8;
+  --color-danger: #ff5c7a;
+
+  --radius-win: 14px;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+}
+
+:root {
+  --accent: #3ee6ff;
+  --accent-2: #b07cff;
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+  color: white;
+}
+
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Thin, quiet scrollbars inside windows */
+.os-scroll {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+}
+.os-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.os-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.12);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.os-scroll::-webkit-scrollbar-thumb:hover { background-color: rgb(255 255 255 / 0.24); }
+
+.selectable { user-select: text; }
+
+/* Glass surface used by windows, dock, menus (web frosted-glass approximation). */
+.glass {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.012) 38%),
+    rgb(11 13 20 / 0.78);
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  border: 1px solid var(--color-line);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    0 24px 70px -12px rgb(0 0 0 / 0.7);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: #0d0f17; backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* Text helpers */
+.label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.display { font-family: var(--font-display); letter-spacing: 0.02em; }
+
+/* Skeleton loading block */
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.04) 25%, rgb(255 255 255 / 0.09) 50%, rgb(255 255 255 / 0.04) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Screen texture: scanlines + grain, fixed and non-interactive */
+.scanlines {
+  background: repeating-linear-gradient(180deg, rgb(255 255 255 / 0.022) 0 1px, transparent 1px 3px);
+  mix-blend-mode: overlay;
+}
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.055;
+}
+.vignette {
+  background: radial-gradient(ellipse at 50% 40%, transparent 55%, rgb(0 0 0 / 0.55) 100%);
+}
+
+/* Window geometry transitions only while snapping (maximize / restore / tidy) */
+.win-snap {
+  transition: transform 0.34s var(--ease-out-expo), width 0.34s var(--ease-out-expo), height 0.34s var(--ease-out-expo);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--color-line-strong);
+  background: rgb(255 255 255 / 0.04);
+  color: var(--color-ink);
+  font-size: 13px; font-weight: 500; white-space: nowrap;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s, color 0.18s;
+}
+.btn:hover { background: rgb(255 255 255 / 0.08); border-color: rgb(255 255 255 / 0.22); }
+.btn:active { transform: scale(0.97); }
+.btn-accent {
+  background: var(--accent);
+  border-color: transparent;
+  color: #05060a;
+  font-weight: 600;
+}
+.btn-accent:hover { background: color-mix(in oklab, var(--accent) 86%, white); border-color: transparent; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-line);
+  background: rgb(255 255 255 / 0.03);
+  font-family: var(--font-mono);
+  font-size: 10.5px; letter-spacing: 0.03em;
+  color: var(--color-dim);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* While a window is dragged or resized, nothing underneath should grab the pointer. */
+.os-dragging iframe { pointer-events: none; }
+.os-dragging * { user-select: none !important; }
+
+/* Aurora wallpaper */
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  animation: aurora-drift 40s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8vw, 6vh, 0) scale(1.15); }
+  100% { transform: translate3d(-6vw, 10vh, 0) scale(0.95); }
+}
+
+/* Easter egg */
+.overdrive body { animation: overdrive 2.5s linear infinite; }
+@keyframes overdrive { to { filter: hue-rotate(360deg); } }
