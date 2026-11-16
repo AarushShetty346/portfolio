@@ -99,7 +99,7 @@ function Stage({ p, index, total, dir, go }: { p: Project; index: number; total:
           </div>
         </motion.div>
 
-        <motion.h2 {...rise(1)} className="display mt-5 text-[34px] font-semibold leading-[0.98] tracking-[-0.015em] text-ink @2xl:text-[46px]">
+        <motion.h2 {...rise(1)} className="display mt-5 text-[26px] font-semibold leading-[1.06] tracking-[-0.01em] text-ink @2xl:text-[36px]">
           {p.name}
         </motion.h2>
         <motion.p {...rise(2)} className="selectable mt-3.5 max-w-[38ch] text-[15px] leading-relaxed text-ink/75">

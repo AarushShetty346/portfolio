@@ -87,7 +87,7 @@ function Welcome() {
         <span className="h-px w-8 bg-accent" />
         {profile.name} / Portfolio
       </div>
-      <h1 className="display mt-3 text-[44px] font-light leading-[1.02] tracking-[-0.01em] text-ink [text-shadow:0_2px_40px_rgb(0_0_0/0.7)]">
+      <h1 className="display mt-3 text-[34px] font-normal leading-[1.08] tracking-[0em] text-ink [text-shadow:0_2px_40px_rgb(0_0_0/0.7)]">
         {greeting}.
       </h1>
       <p className="mt-2.5 max-w-[40ch] text-[14px] leading-relaxed text-ink/70 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)]">
@@ -128,7 +128,7 @@ function Identity() {
       className="absolute right-7 top-[58px] w-[272px]"
     >
       <div className="flex items-end justify-between px-1">
-        <div className="display flex items-baseline gap-1.5 text-[52px] font-light leading-none tracking-[-0.02em] text-ink tabular-nums [text-shadow:0_2px_30px_rgb(0_0_0/0.6)]">
+        <div className="display flex items-baseline gap-1.5 text-[42px] font-normal leading-none tracking-[0em] text-ink tabular-nums [text-shadow:0_2px_30px_rgb(0_0_0/0.6)]">
           {digits}
           {suffix && <span className="text-[13px] font-medium tracking-[0.14em] text-ink/55">{suffix}</span>}
         </div>
@@ -221,7 +221,7 @@ function PhoneHome() {
             <span className="h-px w-5 bg-accent" />
             Portfolio
           </div>
-          <h1 className="display mt-2.5 text-[29px] font-light leading-[1.04] tracking-[-0.01em] text-ink [text-shadow:0_2px_30px_rgb(0_0_0/0.7)]">
+          <h1 className="display mt-2.5 text-[21px] font-normal leading-[1.15] tracking-[0em] text-ink [text-shadow:0_2px_30px_rgb(0_0_0/0.7)]">
             {greeting}.
           </h1>
           <p className="mt-2 text-[13px] leading-relaxed text-ink/70 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)]">{profile.headline}</p>

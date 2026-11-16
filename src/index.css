@@ -1,7 +1,10 @@
 @import "tailwindcss";
-@import "@fontsource-variable/geist";
+@import "@fontsource/chakra-petch/latin-300.css";
+@import "@fontsource/chakra-petch/latin-400.css";
+@import "@fontsource/chakra-petch/latin-500.css";
+@import "@fontsource/chakra-petch/latin-600.css";
 @import "@fontsource-variable/geist-mono";
-@import "@fontsource-variable/oxanium";
+@import "@fontsource-variable/orbitron";
 
 /* ------------------------------------------------------------------
    AARUSH.OS design tokens
@@ -9,9 +12,9 @@
    Project windows override --accent locally to get their own identity.
 ------------------------------------------------------------------- */
 @theme {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
-  --font-display: "Oxanium Variable", "Geist Variable", ui-sans-serif, sans-serif;
+  --font-display: "Orbitron Variable", "Chakra Petch", ui-sans-serif, sans-serif;
 
   --color-void: #05060a;
   --color-obsidian: #090a10;
@@ -60,7 +63,6 @@ body {
   background: var(--color-void);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   user-select: none;

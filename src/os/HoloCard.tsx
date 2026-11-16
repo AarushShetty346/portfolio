@@ -173,7 +173,7 @@ export function HoloCard({ width = 230, className }: { width?: number; className
           </div>
           <div className="absolute inset-x-0 bottom-0" style={{ padding: '0 1.9em 1.9em' }}>
             <div className="font-mono uppercase text-accent" style={{ fontSize: '0.82em', letterSpacing: '0.22em' }}>Operator</div>
-            <div className="display font-semibold leading-none text-ink" style={{ fontSize: '2.5em', marginTop: '0.25em', textShadow: '0 0 0.6em color-mix(in oklab, var(--accent) 55%, transparent)' }}>{profile.name}</div>
+            <div className="display font-semibold leading-none text-ink" style={{ fontSize: '1.8em', marginTop: '0.35em', textShadow: '0 0 0.6em color-mix(in oklab, var(--accent) 55%, transparent)' }}>{profile.name}</div>
             <div className="text-ink/75" style={{ fontSize: '1.08em', marginTop: '0.55em' }}>{profile.role}, {profile.school}</div>
             <div className="flex items-end justify-between" style={{ marginTop: '1.1em' }}>
               <div className="flex items-end" style={{ gap: '0.16em', height: '1.9em' }}>

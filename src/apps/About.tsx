@@ -22,7 +22,7 @@ export default function About() {
         <motion.div {...rise(0)} className="relative flex flex-col gap-7 @xl:flex-row @xl:items-center @xl:gap-8">
           <HoloCard width={170} className="shrink-0 self-center" />
           <div className="min-w-0">
-            <h1 className="display selectable text-[34px] font-semibold leading-none tracking-tight text-ink">{profile.name}</h1>
+            <h1 className="display selectable text-[27px] font-semibold leading-[1.1] tracking-tight text-ink">{profile.name}</h1>
             <p className="selectable mt-3 max-w-[52ch] text-[14.5px] leading-relaxed text-ink/80">{profile.headline}</p>
             <div className="mt-4 flex flex-wrap gap-1.5">
               <span className="chip"><GraduationCap size={11} /> {profile.degree}</span>

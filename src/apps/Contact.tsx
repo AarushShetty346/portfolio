@@ -71,7 +71,7 @@ export default function Contact() {
             </span>
             Open to summer 2027 internships
           </motion.div>
-          <motion.h1 {...rise(1)} className="display mt-5 text-[40px] font-semibold leading-[1] tracking-[-0.015em] text-ink">
+          <motion.h1 {...rise(1)} className="display mt-5 text-[32px] font-semibold leading-[1] tracking-[-0.015em] text-ink">
             Say hello.
           </motion.h1>
           <motion.p {...rise(2)} className="mt-3.5 max-w-[34ch] text-[14px] leading-relaxed text-ink/65">

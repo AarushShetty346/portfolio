@@ -100,7 +100,7 @@ export default function Monitor() {
         <div className="flex shrink-0 flex-col justify-between gap-5 p-6 @lg:w-[230px]">
           <div className="label !text-ink/60">Interface frame rate</div>
           <div>
-            <div className="display flex items-baseline gap-2 text-[58px] font-light leading-none tracking-[-0.03em] tabular-nums text-ink">
+            <div className="display flex items-baseline gap-2 text-[48px] font-normal leading-none tracking-[-0.02em] tabular-nums text-ink">
               {lastFps ?? '..'}
               <span className="text-[13px] font-medium tracking-[0.14em] text-accent">FPS</span>
             </div>

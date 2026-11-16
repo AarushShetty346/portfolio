@@ -133,7 +133,7 @@ export default function Settings() {
         className="os-scroll min-h-0 min-w-0 flex-1 px-5 py-6 @2xl/win:px-8 @2xl/win:py-7"
       >
         {pane !== 'about' && (
-          <h1 className="display mb-7 text-[26px] font-semibold tracking-[-0.01em] text-ink">{PANES.find((x) => x.id === pane)!.label}</h1>
+          <h1 className="display mb-7 text-[22px] font-semibold tracking-[-0.01em] text-ink">{PANES.find((x) => x.id === pane)!.label}</h1>
         )}
         {pane === 'appearance' && (
           <>

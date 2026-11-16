@@ -138,7 +138,7 @@ export default function ProjectApp({ win }: AppProps) {
           <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.08 }} className="w-fit">
             <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={76} className="relative ring-4 ring-[#0b0d14]" />
           </motion.div>
-          <h1 className="display mt-4 text-[25px] font-semibold leading-tight text-ink">{p.name}</h1>
+          <h1 className="display mt-4 text-[21px] font-semibold leading-tight text-ink">{p.name}</h1>
           <div className="mt-1 font-mono text-[11px] tracking-[0.12em] text-accent">{appLabel(p)}</div>
           <p className="mt-3 text-[13px] leading-relaxed text-dim">{p.tagline}</p>
 

@@ -56,7 +56,7 @@ function Page({ item, onBack }: { item: ExperienceItem; onBack: () => void }) {
           <span className="h-px w-6 bg-white/20" />
           <span className="text-dim">{item.period}</span>
         </motion.div>
-        <motion.h2 {...rise(1)} className="display selectable mt-4 max-w-[18ch] text-[29px] font-semibold leading-[1.04] tracking-[-0.015em] text-ink @2xl:text-[38px]">
+        <motion.h2 {...rise(1)} className="display selectable mt-4 max-w-[18ch] text-[22px] font-semibold leading-[1.12] tracking-[-0.01em] text-ink @2xl:text-[29px]">
           {item.title}
         </motion.h2>
         <motion.div {...rise(2)} className="selectable mt-2.5 text-[14.5px] text-ink/65">{item.org}</motion.div>
