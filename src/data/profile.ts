@@ -14,6 +14,13 @@ export const profile = {
   location: 'India',
   timezone: 'Asia/Kolkata',
 
+  /**
+   * PHOTO on the holographic ID card. Change this one line to swap it.
+   * Drop an image into /public (for example public/me.jpg) and point to it,
+   * or paste any image URL. If it fails to load, the card shows your initials.
+   */
+  photo: './me.jpg',
+
   /** Short line under the name. */
   headline: 'I build full-stack products, AI agents and tools that make data easy to see.',
 

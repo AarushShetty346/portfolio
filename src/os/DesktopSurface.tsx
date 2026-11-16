@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { APPS, openApp, openProject } from './apps'
 import { AppIcon, cn, glyphFor } from './icons'
-import { profile } from '../data/profile'
+import { HoloCard } from './HoloCard'
 import { projects } from '../data/projects'
 import { notify, usePrefs, useShell, useWM, WALLPAPERS, type WallpaperId } from './store'
 import { formatTime, useNow } from './TopBar'
@@ -63,6 +63,12 @@ function Widgets() {
   const pinned = projects.filter((p) => p.featured).slice(0, 4)
   const time = formatTime(now, clock24)
   const [digits, suffix] = time.split(/\s/)
+  const [tall, setTall] = useState(() => window.innerHeight >= 860)
+  useEffect(() => {
+    const on = () => setTall(window.innerHeight >= 860)
+    window.addEventListener('resize', on)
+    return () => window.removeEventListener('resize', on)
+  }, [])
 
   return (
     <motion.div
@@ -80,13 +86,9 @@ function Widgets() {
         {now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' })}
       </div>
 
-      <div className="ml-auto mt-7 h-px w-16 bg-accent/70" />
-      <div className="mt-5 text-[19px] font-medium tracking-tight text-ink">{profile.name}</div>
-      <div className="mt-1 text-[13px] leading-relaxed text-dim">
-        {profile.role}, {profile.school}
-      </div>
+      <HoloCard width={tall ? 250 : 200} className="ml-auto mr-2 mt-7 text-left" />
 
-      <div className="mt-8 flex justify-end gap-3">
+      <div className="mt-7 flex justify-end gap-3">
         {pinned.map((p) => (
           <button
             key={p.slug}

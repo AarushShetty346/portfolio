@@ -1,28 +1,11 @@
-import { useState } from 'react'
 import { motion } from 'motion/react'
 import { ArrowUpRight, GraduationCap, MapPin } from 'lucide-react'
 import { profile } from '../data/profile'
 import { projectBySlug } from '../data/projects'
 import { openApp, openProject } from '../os/apps'
+import { HoloCard } from '../os/HoloCard'
 import { AppIcon, glyphFor } from '../os/icons'
 import { ContentSlot, Prose, SectionTitle } from './shared'
-
-function Avatar() {
-  const [failed, setFailed] = useState(false)
-  const initials = profile.name.split(' ').map((w) => w[0]).join('')
-  return (
-    <div className="relative size-[104px] shrink-0">
-      <div className="absolute -inset-[3px] rounded-[26px]" style={{ background: 'conic-gradient(from 210deg, var(--accent), var(--accent-2), transparent 70%, var(--accent))' }} />
-      <div className="absolute inset-0 grid place-items-center overflow-hidden rounded-[24px] bg-panel">
-        {failed ? (
-          <span className="display text-[34px] font-semibold text-accent">{initials}</span>
-        ) : (
-          <img src={`https://github.com/${profile.handle}.png?size=240`} alt={profile.name} className="size-full object-cover" draggable={false} onError={() => setFailed(true)} />
-        )}
-      </div>
-    </div>
-  )
-}
 
 const rise = (i: number) => ({
   initial: { opacity: 0, y: 12 },
@@ -36,8 +19,8 @@ export default function About() {
       {/* Identity */}
       <div className="relative overflow-hidden border-b border-line px-8 pb-7 pt-8">
         <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 120% at 0% 0%, color-mix(in oklab, var(--accent-2) 14%, transparent), transparent 70%)' }} />
-        <motion.div {...rise(0)} className="relative flex items-center gap-6">
-          <Avatar />
+        <motion.div {...rise(0)} className="relative flex items-center gap-8">
+          <HoloCard width={170} className="shrink-0" />
           <div className="min-w-0">
             <h1 className="display selectable text-[34px] font-semibold leading-none tracking-tight text-ink">{profile.name}</h1>
             <p className="selectable mt-3 max-w-[52ch] text-[14.5px] leading-relaxed text-ink/80">{profile.headline}</p>
