@@ -347,7 +347,8 @@ Besides live calls there are scripted demo calls and a mode that checks an uploa
     motif: 'matrix',
     repo: 'AarushShetty346/stock-prediction-app',
     stack: ['Flutter', 'Dart', 'Firebase Auth', 'REST APIs', 'fl_chart'],
-    shots: [],
+    hero: './shots/stock-predict-home.jpg',
+    shots: [{ src: './shots/stock-predict-home.jpg', caption: 'Watchlist' }],
     overview: `Stock Predict is a Flutter mobile app that shows company profiles, closing-price history and a 30-day price projection for US stocks.
 
 I built it as the sole developer during my internship at Applied Cloud Computing in summer 2025, learning Flutter and Dart from scratch along the way, with mentorship from the ACC team.`,
