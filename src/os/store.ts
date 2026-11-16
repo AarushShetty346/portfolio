@@ -211,8 +211,15 @@ export const usePrefs = create<Prefs>()(
 ------------------------------------------------------------------- */
 export interface Notice { id: number; title: string; body?: string; tone?: 'info' | 'ok' | 'warn' }
 
+export interface LoggedNotice extends Notice { at: number }
+
 interface NoticeState {
   items: Notice[]
+  /** Everything shown this session, newest first, for the control centre. */
+  history: LoggedNotice[]
+  unread: number
+  markRead: () => void
+  clearHistory: () => void
   push: (n: Omit<Notice, 'id'>, ttl?: number) => void
   dismiss: (id: number) => void
 }
@@ -220,9 +227,17 @@ interface NoticeState {
 let noticeId = 0
 export const useNotices = create<NoticeState>((set, get) => ({
   items: [],
+  history: [],
+  unread: 0,
+  markRead: () => set({ unread: 0 }),
+  clearHistory: () => set({ history: [], unread: 0 }),
   push: (n, ttl = 4800) => {
     const id = ++noticeId
-    set((s) => ({ items: [...s.items.slice(-3), { ...n, id }] }))
+    set((s) => ({
+      items: [...s.items.slice(-3), { ...n, id }],
+      history: [{ ...n, id, at: Date.now() }, ...s.history].slice(0, 12),
+      unread: s.unread + 1,
+    }))
     window.setTimeout(() => get().dismiss(id), ttl)
   },
   dismiss: (id) => set((s) => ({ items: s.items.filter((x) => x.id !== id) })),
