@@ -15,7 +15,7 @@ function DesktopIcons() {
 
   return (
     <div
-      className="absolute bottom-[104px] left-5 top-[58px] grid w-max grid-flow-col grid-rows-[repeat(auto-fill,98px)] gap-x-2"
+      className="absolute bottom-[104px] left-5 top-[58px] grid w-max grid-flow-col grid-rows-[repeat(auto-fill,92px)] gap-x-2"
       onPointerDown={(e) => e.target === e.currentTarget && setSelected(null)}
     >
       {DESKTOP_APPS.map((id, i) => {
@@ -42,7 +42,7 @@ function DesktopIcons() {
             onDoubleClick={() => openApp(id)}
             onKeyDown={(e) => e.key === 'Enter' && openApp(id)}
             className={cn(
-              'group flex h-[92px] w-[88px] flex-col items-center gap-2 rounded-xl border pt-2.5 transition-colors',
+              'group flex h-[88px] w-[88px] flex-col items-center gap-1.5 rounded-xl border pt-2 transition-colors',
               on ? 'border-accent/35 bg-accent/10' : 'border-transparent hover:bg-white/5',
             )}
           >
