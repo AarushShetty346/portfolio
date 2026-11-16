@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from 'motion/react'
 import { ArrowUpRight, ChevronLeft, ChevronRight, CircleAlert, GitFork, Images, Play, RefreshCw, Star, X } from 'lucide-react'
 import { appLabel, projectBySlug, type Project } from '../data/projects'
 import { useGh, timeAgo, type GhLanguages, type GhRepo } from '../lib/github'
+import { diagrams } from '../data/diagrams'
 import type { AppProps } from '../os/apps'
 import { AppIcon, cn, GitHubMark, glyphFor } from '../os/icons'
+import { Diagram } from './Diagram'
 import { ContentSlot, LanguageBar, Motif, Prose, SectionTitle, Shot } from './shared'
 
 const TABS = ['Overview', 'Technical', 'Architecture', 'Gallery'] as const
@@ -260,15 +262,7 @@ export default function ProjectApp({ win }: AppProps) {
                   </div>
                   <div>
                     <SectionTitle>Diagram</SectionTitle>
-                    <div className="relative aspect-[16/7] overflow-hidden rounded-xl border border-dashed border-line-strong">
-                      <Motif kind={p.motif} seed={p.slug + 'arch'} className="absolute inset-0 opacity-35" />
-                      <div className="absolute inset-0 grid place-items-center">
-                        <div className="rounded-lg border border-line bg-[#0b0d14]/85 px-4 py-2.5 text-center backdrop-blur">
-                          <div className="text-[13px] text-ink">Diagram slot</div>
-                          <div className="mt-0.5 text-[11.5px] text-dim">An architecture diagram will sit here.</div>
-                        </div>
-                      </div>
-                    </div>
+                    {diagrams[p.slug] ? <Diagram data={diagrams[p.slug]} /> : <ContentSlot title="Diagram coming soon" path="src/data/diagrams.ts" />}
                   </div>
                 </div>
               )}
