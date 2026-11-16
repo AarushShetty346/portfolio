@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { ArrowRight } from 'lucide-react'
 import { APPS, openApp, openProject } from './apps'
 import { AppIcon, cn, glyphFor } from './icons'
+import { profile } from '../data/profile'
 import { HoloCard } from './HoloCard'
 import { projects } from '../data/projects'
 import { notify, usePrefs, useShell, useWM, WALLPAPERS, type WallpaperId } from './store'
 import { formatTime, useNow } from './TopBar'
 
-const DESKTOP_APPS = ['projects', 'github', 'about', 'experience', 'resume', 'contact']
+const DESKTOP_APPS = ['projects', 'about', 'experience', 'github', 'resume', 'contact']
 
 function DesktopIcons() {
   const [selected, setSelected] = useState<string | null>(null)
@@ -15,7 +17,7 @@ function DesktopIcons() {
 
   return (
     <div
-      className="absolute bottom-[104px] left-5 top-[58px] grid w-max grid-flow-col grid-rows-[repeat(auto-fill,92px)] gap-x-2"
+      className="absolute left-7 top-[64px] grid grid-cols-2 gap-x-1.5 gap-y-1"
       onPointerDown={(e) => e.target === e.currentTarget && setSelected(null)}
     >
       {DESKTOP_APPS.map((id, i) => {
@@ -41,15 +43,26 @@ function DesktopIcons() {
             }}
             onDoubleClick={() => openApp(id)}
             onKeyDown={(e) => e.key === 'Enter' && openApp(id)}
-            className={cn(
-              'group flex h-[88px] w-[88px] flex-col items-center gap-1.5 rounded-xl border pt-2 transition-colors',
-              on ? 'border-accent/35 bg-accent/10' : 'border-transparent hover:bg-white/5',
-            )}
+            className="group flex h-[92px] w-[88px] flex-col items-center gap-2 pt-2.5"
           >
-            <span className="transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-active:scale-95">
-              <AppIcon icon={a.icon} color={a.color} size={50} />
+            <span className="relative transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-active:scale-95">
+              <span
+                className="absolute -inset-1.5 rounded-[20px] border transition-all duration-200"
+                style={{
+                  borderColor: on ? `color-mix(in oklab, ${a.color} 55%, transparent)` : 'transparent',
+                  background: on ? `color-mix(in oklab, ${a.color} 12%, transparent)` : undefined,
+                }}
+              />
+              <AppIcon icon={a.icon} color={a.color} size={52} className="relative" />
             </span>
-            <span className="text-[12px] font-medium text-ink/90 [text-shadow:0_1px_6px_rgb(0_0_0/0.9)]">{a.name}</span>
+            <span
+              className={cn(
+                'rounded-[5px] px-1.5 py-px text-[11.5px] font-medium leading-tight tracking-[0.01em] transition-colors',
+                on ? 'bg-white/14 text-white' : 'text-ink/90 [text-shadow:0_1px_8px_rgb(0_0_0),0_0_2px_rgb(0_0_0)]',
+              )}
+            >
+              {a.name}
+            </span>
           </motion.button>
         )
       })}
@@ -57,7 +70,42 @@ function DesktopIcons() {
   )
 }
 
-function Widgets() {
+/** Lower-left: who this machine belongs to, and where to start. */
+function Welcome() {
+  const now = useNow(30000)
+  const h = now.getHours()
+  const greeting = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute bottom-[112px] left-8 max-w-[440px]"
+    >
+      <div className="flex items-center gap-3 font-mono text-[10.5px] uppercase tracking-[0.2em] text-ink/55">
+        <span className="h-px w-8 bg-accent" />
+        {profile.name} / Portfolio
+      </div>
+      <h1 className="display mt-3 text-[44px] font-light leading-[1.02] tracking-[-0.01em] text-ink [text-shadow:0_2px_40px_rgb(0_0_0/0.7)]">
+        {greeting}.
+      </h1>
+      <p className="mt-2.5 max-w-[40ch] text-[14px] leading-relaxed text-ink/70 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)]">
+        {profile.headline}
+      </p>
+      <div className="mt-4 flex items-center gap-4">
+        <button className="btn btn-accent" onClick={() => openApp('projects')}>
+          Open the library <ArrowRight size={14} />
+        </button>
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink/45">
+          or press <kbd className="rounded border border-white/15 px-1 py-px text-ink/70">Ctrl K</kbd>
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
+/** Right: the clock, then the identity panel built around the ID card. */
+function Identity() {
   const clock24 = usePrefs((s) => s.clock24)
   const now = useNow()
   const pinned = projects.filter((p) => p.featured).slice(0, 4)
@@ -76,38 +124,78 @@ function Widgets() {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 16 }}
       transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute right-8 top-[70px] w-[300px] text-right"
+      className="absolute right-7 top-[58px] w-[272px]"
     >
-      <div className="display flex items-baseline justify-end gap-2 text-[76px] font-light leading-none tracking-tight text-ink tabular-nums [text-shadow:0_2px_30px_rgb(0_0_0/0.6)]">
-        {digits}
-        {suffix && <span className="text-[18px] font-medium tracking-[0.12em] text-dim">{suffix}</span>}
-      </div>
-      <div className="mt-2 font-mono text-[12px] uppercase tracking-[0.2em] text-dim">
-        {now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' })}
+      <div className="flex items-end justify-between px-1">
+        <div className="display flex items-baseline gap-1.5 text-[52px] font-light leading-none tracking-[-0.02em] text-ink tabular-nums [text-shadow:0_2px_30px_rgb(0_0_0/0.6)]">
+          {digits}
+          {suffix && <span className="text-[13px] font-medium tracking-[0.14em] text-ink/55">{suffix}</span>}
+        </div>
+        <div className="pb-1 text-right font-mono text-[10.5px] uppercase leading-[1.5] tracking-[0.16em] text-ink/60">
+          {now.toLocaleDateString([], { weekday: 'long' })}
+          <br />
+          {now.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
+        </div>
       </div>
 
-      <HoloCard width={tall ? 250 : 200} className="ml-auto mr-2 mt-7 text-left" />
+      <div className="glass mt-4 overflow-hidden rounded-[18px]">
+        <div className="flex h-9 items-center justify-between border-b border-white/[0.07] px-3.5">
+          <span className="label !text-ink/60">Identity</span>
+          <span className="flex items-center gap-1.5 text-[11px] text-ink/75">
+            <span className="relative flex size-1.5">
+              <span className="absolute inset-0 animate-ping rounded-full bg-term opacity-60" />
+              <span className="relative size-1.5 rounded-full bg-term" />
+            </span>
+            Open to internships
+          </span>
+        </div>
 
-      <div className="mt-7 flex justify-end gap-3">
-        {pinned.map((p) => (
-          <button
-            key={p.slug}
-            title={p.name}
-            aria-label={`Open ${p.name}`}
-            onClick={() => openProject(p.slug)}
-            className="transition-transform duration-300 ease-out hover:-translate-y-1 active:scale-95"
-          >
-            <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={44} />
-          </button>
-        ))}
+        <div
+          className="relative grid place-items-center"
+          style={{
+            padding: tall ? '22px 0 20px' : '16px 0 14px',
+            background: 'radial-gradient(80% 60% at 50% 45%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 70%)',
+          }}
+        >
+          <HoloCard width={tall ? 210 : 164} />
+        </div>
+
+        <div className="grid grid-cols-2 border-t border-white/[0.07] text-[12px]">
+          <button onClick={() => openApp('about')} className="h-9 border-r border-white/[0.07] text-ink/80 transition-colors hover:bg-white/[0.06] hover:text-ink">About me</button>
+          <button onClick={() => openApp('resume')} className="h-9 text-ink/80 transition-colors hover:bg-white/[0.06] hover:text-ink">Resume</button>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-white/[0.07] px-3.5 py-2.5">
+          <span className="label !text-ink/60">Pinned</span>
+          <div className="flex gap-2">
+            {pinned.map((p) => (
+              <button
+                key={p.slug}
+                title={p.name}
+                aria-label={`Open ${p.name}`}
+                onClick={() => openProject(p.slug)}
+                className="transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-95"
+              >
+                <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={30} />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <button
-        onClick={() => openApp('projects')}
-        className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-faint transition-colors hover:text-accent"
-      >
-        Open the project library
-      </button>
     </motion.div>
+  )
+}
+
+/** Quiet edge detail: a build and location readout beside the dock. */
+function Readout() {
+  return (
+    <div className="absolute bottom-[24px] left-8 hidden items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink/35 xl:flex">
+      <span>AARUSH.OS 2.0</span>
+      <span className="size-[3px] rounded-full bg-ink/35" />
+      <span>Vellore, IN</span>
+      <span className="size-[3px] rounded-full bg-ink/35" />
+      <span>12.97 N 79.16 E</span>
+    </div>
   )
 }
 
@@ -130,7 +218,7 @@ function ContextMenu({ pos, onClose }: { pos: MenuPos; onClose: () => void }) {
     { label: 'Search', hint: 'Ctrl K', run: () => setLauncher(true) },
     null,
     { label: 'Next wallpaper', run: nextWallpaper },
-    { label: prefs.showWidgets ? 'Hide desktop widget' : 'Show desktop widget', run: () => prefs.set('showWidgets', !prefs.showWidgets) },
+    { label: prefs.showWidgets ? 'Hide identity panel' : 'Show identity panel', run: () => prefs.set('showWidgets', !prefs.showWidgets) },
     { label: 'Tidy windows', hint: 'Alt T', run: tidy },
     { label: 'Close all windows', run: closeAll },
     null,
@@ -163,13 +251,9 @@ function ContextMenu({ pos, onClose }: { pos: MenuPos; onClose: () => void }) {
     >
       {items.map((it, i) =>
         it ? (
-          <button
-            key={it.label}
-            onClick={() => { it.run(); onClose() }}
-            className="flex h-8 w-full items-center justify-between rounded-md px-2.5 text-left text-[13px] text-ink/90 hover:bg-accent/15"
-          >
+          <button key={it.label} onClick={() => { it.run(); onClose() }} className="menu-item">
             {it.label}
-            {it.hint && <span className="font-mono text-[10.5px] text-faint">{it.hint}</span>}
+            {it.hint && <kbd>{it.hint}</kbd>}
           </button>
         ) : (
           <div key={i} className="mx-2 my-1 h-px bg-line" />
@@ -179,7 +263,7 @@ function ContextMenu({ pos, onClose }: { pos: MenuPos; onClose: () => void }) {
   )
 }
 
-/** Everything that lives directly on the wallpaper: icons, widget, right-click menu. */
+/** Everything that lives directly on the wallpaper: icons, welcome, identity panel, right-click menu. */
 export function DesktopSurface() {
   const showWidgets = usePrefs((s) => s.showWidgets)
   const [menu, setMenu] = useState<MenuPos | null>(null)
@@ -194,7 +278,9 @@ export function DesktopSurface() {
         }}
       >
         <DesktopIcons />
-        <AnimatePresence>{showWidgets && <Widgets key="w" />}</AnimatePresence>
+        <Welcome />
+        <Readout />
+        <AnimatePresence>{showWidgets && <Identity key="w" />}</AnimatePresence>
       </div>
       <AnimatePresence>{menu && <ContextMenu key={`${menu.x}-${menu.y}`} pos={menu} onClose={() => setMenu(null)} />}</AnimatePresence>
     </>
