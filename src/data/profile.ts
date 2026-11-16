@@ -54,9 +54,8 @@ export const profile = {
   },
 
   /**
-   * Resume file. Put a PDF at /public/resume.pdf and set this to './resume.pdf'.
-   * While it is empty, the Resume app shows an empty state instead of a broken viewer.
-   * The file is public once deployed, so use a version without your phone number.
+   * Resume file, served from /public/resume.pdf. This copy is public and has no
+   * phone number. Set this to '' to show the "not published" state instead.
    */
-  resume: '',
+  resume: './resume.pdf',
 }
