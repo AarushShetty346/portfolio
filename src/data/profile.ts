@@ -58,4 +58,7 @@ export const profile = {
    * phone number. Set this to '' to show the "not published" state instead.
    */
   resume: './resume.pdf',
+  /** The live "now playing" card, the same one used on the GitHub profile README. */
+  spotifyWidget:
+    'https://spotify-github-profile.kittinanx.com/api/view?uid=rdyxltcokotvop9m87p08awrs&cover_image=true&theme=natemoo-re&show_offline=true&background_color=121212&interchange=true&profanity=false&hide_remaster=true&bar_color=53b14f&bar_color_cover=true',
 }

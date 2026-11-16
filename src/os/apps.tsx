@@ -1,5 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
-import { AtSign, Boxes, BriefcaseBusiness, FileText, Radar, SlidersHorizontal, UserRound } from 'lucide-react'
+import { AtSign, Boxes, BriefcaseBusiness, FileText, Gamepad2, Music2, Radar, SlidersHorizontal, UserRound } from 'lucide-react'
 import { appLabel, projectBySlug } from '../data/projects'
 import { GitHubMark, glyphFor, type IconType } from './icons'
 import { useWM, type Win } from './store'
@@ -25,6 +25,8 @@ export const APPS: AppDef[] = [
   { id: 'experience', name: 'Experience', blurb: 'Internships and hackathons', icon: BriefcaseBusiness, color: '#ffb657', w: 900, h: 620, component: lazy(() => import('../apps/Experience')) },
   { id: 'resume', name: 'Resume', blurb: 'View and download', icon: FileText, color: '#5b9dff', w: 820, h: 660, component: lazy(() => import('../apps/Resume')) },
   { id: 'contact', name: 'Contact', blurb: 'Get in touch', icon: AtSign, color: '#ff5fd2', w: 760, h: 520, component: lazy(() => import('../apps/Contact')) },
+  { id: 'music', name: 'Music', blurb: 'What is playing on my Spotify', icon: Music2, color: '#53e08a', w: 640, h: 560, component: lazy(() => import('../apps/Music')) },
+  { id: 'arcade', name: 'Arcade', blurb: 'Four small games', icon: Gamepad2, color: '#ff8a5c', w: 760, h: 700, component: lazy(() => import('../apps/Arcade')) },
   { id: 'settings', name: 'Settings', blurb: 'Wallpaper, accent, preferences', icon: SlidersHorizontal, color: '#aab3c5', w: 820, h: 580, component: lazy(() => import('../apps/Settings')) },
   { id: 'monitor', name: 'System Monitor', blurb: 'Session status', icon: Radar, color: '#5dffa8', w: 780, h: 540, component: lazy(() => import('../apps/Monitor')) },
 ]

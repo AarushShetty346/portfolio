@@ -91,7 +91,7 @@ const Group = ({ title, bare, children }: { title: string; bare?: boolean; child
 
 const SHORTCUTS: [string, string][] = [
   ['Ctrl K  or  /', 'Search apps and projects'],
-  ['Alt 1 to 8', 'Open a dock app'],
+  ['Alt 1 to 9', 'Open a dock app'],
   ['Alt W', 'Close the focused window'],
   ['Alt M', 'Minimize the focused window'],
   ['Alt Enter', 'Maximize or restore'],

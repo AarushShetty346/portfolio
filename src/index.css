@@ -73,7 +73,7 @@ body {
   color: white;
 }
 
-input:focus-visible, textarea:focus-visible { outline: none; }
+input:focus-visible, textarea:focus-visible, .no-ring:focus-visible { outline: none; }
 
 button { cursor: pointer; }
 button:disabled { cursor: default; }
