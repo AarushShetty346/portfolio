@@ -145,7 +145,7 @@ export const useFocusedId = () =>
 /* ------------------------------------------------------------------
    Preferences (persisted locally)
 ------------------------------------------------------------------- */
-export type WallpaperId = 'orbit' | 'milkyway' | 'chicago' | 'dusk' | 'ridge' | 'grid' | 'city' | 'horizon' | 'flow' | 'aurora' | 'obsidian'
+export type WallpaperId = 'chicago' | 'milkyway' | 'globe' | 'terrain' | 'warp' | 'flow' | 'ridge' | 'grid' | 'aurora' | 'dusk'
 export type AccentId = 'cyan' | 'violet' | 'magenta' | 'green' | 'amber'
 
 export const ACCENTS: Record<AccentId, { name: string; value: string; second: string }> = {
@@ -156,25 +156,23 @@ export const ACCENTS: Record<AccentId, { name: string; value: string; second: st
   amber: { name: 'Amber', value: '#ffb657', second: '#ff5fd2' },
 }
 
-/** Photograph wallpapers. All three are public domain (NASA, US National Park Service). */
+/** Photograph wallpapers. Both are public domain (NASA, US National Park Service). */
 export const PHOTOS: Partial<Record<WallpaperId, string>> = {
-  orbit: './wallpapers/orbit.jpg',
   milkyway: './wallpapers/milkyway.jpg',
   chicago: './wallpapers/chicago.jpg',
 }
 
 export const WALLPAPERS: Record<WallpaperId, { name: string; note: string }> = {
-  orbit: { name: 'Orbit', note: 'Aurora and city lights from the space station' },
-  milkyway: { name: 'Milky Way', note: 'Night sky over the Rocky Mountains' },
   chicago: { name: 'Chicago', note: 'The street grid at night, from orbit' },
-  dusk: { name: 'Dusk', note: 'Last light, nothing else' },
+  milkyway: { name: 'Milky Way', note: 'Night sky over the Rocky Mountains' },
+  globe: { name: 'Globe', note: 'A slowly turning sphere of points' },
+  terrain: { name: 'Terrain', note: 'Flying low over a wire landscape' },
+  warp: { name: 'Warp', note: 'Stars streaming past' },
+  flow: { name: 'Flow field', note: 'Particles tracing a slow current' },
   ridge: { name: 'Ridgelines', note: 'Slow lines of terrain' },
   grid: { name: 'Dot grid', note: 'Quiet drafting paper' },
-  city: { name: 'Neon city', note: 'Skyline over a moving grid' },
-  horizon: { name: 'Horizon', note: 'Drifting perspective grid' },
-  flow: { name: 'Flow field', note: 'Particles tracing a slow current' },
   aurora: { name: 'Aurora', note: 'Soft moving light' },
-  obsidian: { name: 'Obsidian', note: 'Still and dark' },
+  dusk: { name: 'Dusk', note: 'Last light, drifting' },
 }
 
 interface Prefs {
@@ -189,7 +187,7 @@ interface Prefs {
 }
 
 const DEFAULT_PREFS = {
-  wallpaper: 'orbit' as WallpaperId,
+  wallpaper: 'chicago' as WallpaperId,
   accent: 'cyan' as AccentId,
   bootOnStart: true,
   clock24: false,
@@ -206,9 +204,9 @@ export const usePrefs = create<Prefs>()(
     }),
     {
       name: 'aarush-os:prefs',
-      version: 4,
-      // v4 made a real photograph the default look
-      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'orbit' as WallpaperId }),
+      version: 5,
+      // v5 trimmed the wallpaper list and made Chicago the default
+      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'chicago' as WallpaperId }),
     },
   ),
 )
@@ -227,6 +225,7 @@ interface NoticeState {
   unread: number
   markRead: () => void
   clearHistory: () => void
+  removeHistory: (id: number) => void
   push: (n: Omit<Notice, 'id'>, ttl?: number) => void
   dismiss: (id: number) => void
 }
@@ -238,6 +237,7 @@ export const useNotices = create<NoticeState>((set, get) => ({
   unread: 0,
   markRead: () => set({ unread: 0 }),
   clearHistory: () => set({ history: [], unread: 0 }),
+  removeHistory: (id) => set((st) => ({ history: st.history.filter((n) => n.id !== id) })),
   push: (n, ttl = 4800) => {
     const id = ++noticeId
     set((s) => ({

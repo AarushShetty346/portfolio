@@ -20,12 +20,23 @@ const photoPreview = (id: WallpaperId): React.CSSProperties => ({
 })
 
 const PREVIEW: Record<WallpaperId, React.CSSProperties> = {
-  orbit: photoPreview('orbit'),
-  milkyway: photoPreview('milkyway'),
   chicago: photoPreview('chicago'),
-  dusk: {
+  milkyway: photoPreview('milkyway'),
+  globe: {
     background:
-      'radial-gradient(120% 60% at 62% 108%, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 62%), linear-gradient(180deg, #04050b 0%, #070919 42%, #100b26 70%, #1a0c2c 100%)',
+      'radial-gradient(circle at 62% 52%, transparent 0 27%, color-mix(in oklab, var(--accent) 70%, transparent) 27.5% 28.5%, transparent 29%), repeating-radial-gradient(circle at 62% 52%, transparent 0 5px, color-mix(in oklab, var(--accent) 26%, transparent) 5.5px, transparent 6.5px) 62% 52% / 56% 90% no-repeat, #05060b',
+  },
+  terrain: {
+    background:
+      'linear-gradient(180deg, transparent 45%, color-mix(in oklab, var(--accent-2) 80%, transparent) 45.5%, transparent 47%), repeating-linear-gradient(180deg, transparent 0 7px, color-mix(in oklab, var(--accent) 34%, transparent) 7.5px, transparent 8.5px) 0 100% / 100% 54% no-repeat, radial-gradient(60% 50% at 50% 46%, color-mix(in oklab, var(--accent-2) 30%, transparent), transparent), #05060b',
+  },
+  warp: {
+    background:
+      'repeating-conic-gradient(from 0deg at 58% 50%, transparent 0 7deg, rgb(225 232 255 / 0.2) 7.2deg 7.6deg, transparent 8deg 15deg), radial-gradient(circle at 58% 50%, #05060b 0 16%, transparent 60%), #05060b',
+  },
+  flow: {
+    background:
+      'repeating-radial-gradient(ellipse at 20% 120%, transparent 0 7px, color-mix(in oklab, var(--accent) 30%, transparent) 8px, transparent 9px), repeating-radial-gradient(ellipse at 110% -10%, transparent 0 9px, color-mix(in oklab, var(--accent-2) 26%, transparent) 10px, transparent 11px), #07080d',
   },
   ridge: {
     background:
@@ -35,24 +46,13 @@ const PREVIEW: Record<WallpaperId, React.CSSProperties> = {
     background:
       'radial-gradient(circle, rgb(255 255 255 / 0.22) 1px, transparent 1.5px) 0 0 / 11px 11px, radial-gradient(60% 55% at 78% 70%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%), #06070c',
   },
-  city: {
-    background:
-      'linear-gradient(180deg, transparent 65%, color-mix(in oklab, var(--accent-2) 90%, transparent) 65.5%, transparent 67%), repeating-linear-gradient(90deg, #06061a 0 9px, transparent 9px 12px, #0b0a26 12px 26px, transparent 26px 28px) 0 38% / 100% 28% no-repeat, linear-gradient(180deg, #04050d 0%, #0a0a24 40%, color-mix(in oklab, var(--accent-2) 45%, #0a0a24) 66%, #030409 67%, color-mix(in oklab, var(--accent) 16%, #030409) 100%)',
-  },
-  horizon: {
-    background:
-      'linear-gradient(180deg, transparent 59%, color-mix(in oklab, var(--accent) 80%, transparent) 59.5%, transparent 61%), radial-gradient(circle at 50% 62%, color-mix(in oklab, var(--accent-2) 45%, transparent) 0 26%, transparent 27%), repeating-linear-gradient(90deg, color-mix(in oklab, var(--accent) 22%, transparent) 0 1px, transparent 1px 14px), #07080d',
-  },
-  flow: {
-    background:
-      'repeating-radial-gradient(ellipse at 20% 120%, transparent 0 7px, color-mix(in oklab, var(--accent) 30%, transparent) 8px, transparent 9px), repeating-radial-gradient(ellipse at 110% -10%, transparent 0 9px, color-mix(in oklab, var(--accent-2) 26%, transparent) 10px, transparent 11px), #07080d',
-  },
   aurora: {
     background:
       'radial-gradient(ellipse at 15% 10%, color-mix(in oklab, var(--accent) 55%, transparent), transparent 55%), radial-gradient(ellipse at 90% 40%, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 55%), radial-gradient(ellipse at 50% 120%, #2a4bff88, transparent 60%), #07080d',
   },
-  obsidian: {
-    background: 'radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 60%), #07080d',
+  dusk: {
+    background:
+      'radial-gradient(120% 60% at 62% 108%, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 62%), linear-gradient(180deg, #04050b 0%, #070919 42%, #100b26 70%, #1a0c2c 100%)',
   },
 }
 

@@ -8,91 +8,6 @@ const hexA = (hex: string, alpha: number) => {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
 }
 
-/* Horizon: a slow perspective grid under a thin ringed sun. */
-function drawHorizon({ c, w, h, t, a, b }: Ctx) {
-  c.clearRect(0, 0, w, h)
-  const hy = h * 0.6
-  const cx = w * 0.5
-
-  // sky glow
-  const sky = c.createRadialGradient(cx, hy, 0, cx, hy, Math.max(w, h) * 0.7)
-  sky.addColorStop(0, hexA(b, 0.2))
-  sky.addColorStop(0.35, hexA(a, 0.06))
-  sky.addColorStop(1, 'rgba(0,0,0,0)')
-  c.fillStyle = sky
-  c.fillRect(0, 0, w, hy)
-
-  // stars
-  for (let i = 0; i < 70; i++) {
-    const sx = (Math.sin(i * 91.7) * 0.5 + 0.5) * w
-    const sy = (Math.sin(i * 47.3 + 2) * 0.5 + 0.5) * hy * 0.92
-    const tw = 0.25 + 0.25 * Math.sin(t * 0.6 + i * 1.7)
-    c.fillStyle = `rgba(220,235,255,${tw * 0.55})`
-    c.fillRect(sx, sy, 1.2, 1.2)
-  }
-
-  // ringed sun, clipped by the horizon
-  const r = Math.min(w, h) * 0.26
-  c.save()
-  c.beginPath()
-  c.rect(0, 0, w, hy)
-  c.clip()
-  const sun = c.createLinearGradient(0, hy - r, 0, hy + r * 0.2)
-  sun.addColorStop(0, hexA(a, 0.0))
-  sun.addColorStop(1, hexA(b, 0.22))
-  c.fillStyle = sun
-  c.beginPath()
-  c.arc(cx, hy + r * 0.18, r, 0, Math.PI * 2)
-  c.fill()
-  c.lineWidth = 1
-  for (let i = 0; i < 4; i++) {
-    c.strokeStyle = hexA(i % 2 ? b : a, 0.34 - i * 0.07)
-    c.beginPath()
-    c.arc(cx, hy + r * 0.18, r + i * (14 + i * 6), 0, Math.PI * 2)
-    c.stroke()
-  }
-  c.restore()
-
-  // floor fade
-  const floor = c.createLinearGradient(0, hy, 0, h)
-  floor.addColorStop(0, hexA(a, 0.1))
-  floor.addColorStop(0.5, 'rgba(0,0,0,0)')
-  c.fillStyle = floor
-  c.fillRect(0, hy, w, h - hy)
-
-  // perspective grid
-  c.lineWidth = 1
-  const cols = 26
-  for (let i = -cols; i <= cols; i++) {
-    const x = cx + (i / cols) * w * 2.2
-    const fade = 1 - Math.min(1, Math.abs(i) / cols)
-    c.strokeStyle = hexA(a, 0.05 + fade * 0.2)
-    c.beginPath()
-    c.moveTo(cx + (i / cols) * w * 0.06, hy)
-    c.lineTo(x, h)
-    c.stroke()
-  }
-  const rows = 18
-  const scroll = (t * 0.085) % 1
-  for (let j = 0; j < rows; j++) {
-    const p = (j + scroll) / rows
-    const y = hy + Math.pow(p, 2.4) * (h - hy)
-    c.strokeStyle = hexA(a, 0.04 + p * 0.26)
-    c.beginPath()
-    c.moveTo(0, y)
-    c.lineTo(w, y)
-    c.stroke()
-  }
-
-  // horizon line
-  const line = c.createLinearGradient(0, 0, w, 0)
-  line.addColorStop(0, 'rgba(0,0,0,0)')
-  line.addColorStop(0.5, hexA(a, 0.9))
-  line.addColorStop(1, 'rgba(0,0,0,0)')
-  c.fillStyle = line
-  c.fillRect(0, hy - 0.5, w, 1.2)
-}
-
 /* Ridgelines: stacked lines of terrain drifting slowly, nearer ones brighter.
    Each ridge hides the ones behind it, so the lines never tangle. */
 function drawRidge({ c, w, h, t, a, b }: Ctx) {
@@ -168,156 +83,161 @@ function makeFlow() {
   }
 }
 
-/* Neon city: a layered skyline with lit windows and neon signs over a moving grid.
-   The skyline is painted once per size into an offscreen canvas; only the grid,
-   the haze and a few flickering signs are redrawn each frame. */
-function makeCity() {
-  let cache: HTMLCanvasElement | null = null
-  let key = ''
-  let signs: { x: number; y: number; w: number; h: number; col: string; ph: number }[] = []
+/* ---- 3D wallpapers: real perspective projection, drawn as points and lines ---- */
 
-  const rand = (seed: number) => {
-    let s = seed
-    return () => ((s = (s * 16807) % 2147483647), (s - 1) / 2147483646)
+/* Globe: a sphere of points turning slowly, with one tilted orbit. */
+function drawGlobe({ c, w, h, t, a, b }: Ctx) {
+  c.clearRect(0, 0, w, h)
+  const cx = w * 0.6, cy = h * 0.52
+  const R = Math.min(w, h) * 0.33
+  const f = R * 3.2
+  const ry = t * 0.1, rx = 0.38
+  const cosY = Math.cos(ry), sinY = Math.sin(ry), cosX = Math.cos(rx), sinX = Math.sin(rx)
+
+  const halo = c.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.7)
+  halo.addColorStop(0, hexA(a, 0.1))
+  halo.addColorStop(0.55, hexA(b, 0.05))
+  halo.addColorStop(1, 'rgba(0,0,0,0)')
+  c.fillStyle = halo
+  c.fillRect(0, 0, w, h)
+
+  const put = (x: number, y: number, z: number, col: string, size: number, alpha: number) => {
+    const x1 = x * cosY + z * sinY, z1 = -x * sinY + z * cosY
+    const y2 = y * cosX - z1 * sinX, z2 = y * sinX + z1 * cosX
+    const k = f / (f - z2)
+    const depth = (z2 / R + 1) / 2
+    c.fillStyle = hexA(col, alpha * (0.12 + depth * 0.88))
+    const s = size * k
+    c.fillRect(cx + x1 * k - s / 2, cy + y2 * k - s / 2, s, s)
   }
 
-  const build = (w: number, h: number, a: string, b: string, dpr: number) => {
-    const cv = document.createElement('canvas')
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr)
-    const c = cv.getContext('2d')!
-    c.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const hy = h * 0.66
-    const r = rand(346)
-    signs = []
-
-    // sky: deep indigo falling into a magenta haze at the horizon
-    const sky = c.createLinearGradient(0, 0, 0, hy)
-    sky.addColorStop(0, '#04050d')
-    sky.addColorStop(0.55, '#0a0a24')
-    sky.addColorStop(0.86, hexA(b, 0.3))
-    sky.addColorStop(1, hexA(b, 0.5))
-    c.fillStyle = sky
-    c.fillRect(0, 0, w, hy)
-    for (let i = 0; i < 140; i++) {
-      c.fillStyle = `rgba(215,225,255,${0.15 + r() * 0.5})`
-      c.fillRect(r() * w, r() * hy * 0.7, r() > 0.9 ? 1.6 : 1, 1)
+  for (let lat = -84; lat <= 84; lat += 12) {
+    const phi = (lat * Math.PI) / 180
+    const r = Math.cos(phi) * R, y = Math.sin(phi) * R
+    const n = Math.max(8, Math.round(64 * Math.cos(phi)))
+    for (let i = 0; i < n; i++) {
+      const th = (i / n) * Math.PI * 2
+      put(Math.cos(th) * r, y, Math.sin(th) * r, a, 1.6, 0.85)
     }
+  }
+  for (let lon = 0; lon < 360; lon += 30) {
+    const th = (lon * Math.PI) / 180
+    for (let i = -44; i <= 44; i++) {
+      const phi = (i / 45) * (Math.PI / 2)
+      put(Math.cos(phi) * Math.cos(th) * R, Math.sin(phi) * R, Math.cos(phi) * Math.sin(th) * R, a, 1.1, 0.4)
+    }
+  }
+  // a tilted orbit with one satellite
+  const oR = R * 1.38
+  for (let i = 0; i < 160; i++) {
+    const th = (i / 160) * Math.PI * 2
+    put(Math.cos(th) * oR, Math.sin(th) * oR * 0.32, Math.sin(th) * oR, b, 1.1, 0.55)
+  }
+  const st = t * 0.45
+  put(Math.cos(st) * oR, Math.sin(st) * oR * 0.32, Math.sin(st) * oR, b, 5, 1)
+}
 
-    // three depth layers of towers, far to near
-    const layers = [
-      { fill: '#141038', top: 0.3, min: 0.1, wMin: 26, wMax: 60, lit: 0.1, glow: 0.0 },
-      { fill: '#0b0a26', top: 0.42, min: 0.12, wMin: 34, wMax: 84, lit: 0.2, glow: 0.35 },
-      { fill: '#05050f', top: 0.34, min: 0.06, wMin: 46, wMax: 120, lit: 0.26, glow: 0.8 },
-    ]
-    layers.forEach((L, li) => {
-      let x = -20 - r() * 40
-      while (x < w + 20) {
-        const bw = L.wMin + r() * (L.wMax - L.wMin)
-        // keep the middle lower so the horizon glow and the windows stay readable
-        const mid = 1 - Math.pow(Math.abs((x + bw / 2) / w - 0.5) * 2, 1.4) * 0.55
-        const bh = hy * (L.min + r() * L.top * (1.25 - mid * 0.75))
-        const top = hy - bh
-        const col = r() > 0.5 ? a : b
-        c.fillStyle = L.fill
-        c.fillRect(x, top, bw, bh)
-        // setback crown and antenna
-        if (r() > 0.55) {
-          const cw = bw * (0.35 + r() * 0.3)
-          c.fillRect(x + (bw - cw) / 2, top - bh * 0.08, cw, bh * 0.08)
-          if (r() > 0.5) c.fillRect(x + bw / 2 - 0.75, top - bh * 0.08 - 26 * r() - 8, 1.5, 34)
-        }
-        // windows
-        const gx = li === 2 ? 7 : 5, gy = li === 2 ? 9 : 7
-        for (let wy = top + 6; wy < hy - 4; wy += gy) {
-          for (let wx = x + 4; wx < x + bw - 4; wx += gx) {
-            if (r() < L.lit) {
-              c.fillStyle = hexA(r() > 0.7 ? b : a, 0.25 + r() * 0.55)
-              c.fillRect(wx, wy, gx - 3, gy - 5)
-            }
-          }
-        }
-        // neon edge on the nearer layers
-        if (L.glow && r() > 0.35) {
-          c.strokeStyle = hexA(col, 0.5 * L.glow)
-          c.lineWidth = 1
-          c.shadowColor = col; c.shadowBlur = 10 * L.glow
-          c.strokeRect(x + 0.5, top + 0.5, bw - 1, bh)
-          c.shadowBlur = 0
-        }
-        // flickering sign
-        if (li > 0 && r() > 0.62 && bh > 90) {
-          const sw = 8 + r() * 10, sh = 26 + r() * 46
-          signs.push({ x: x + 6 + r() * Math.max(1, bw - sw - 12), y: top + 14 + r() * (bh * 0.4), w: sw, h: sh, col, ph: r() * 20 })
-        }
-        x += bw + (li === 0 ? 2 : r() * 14)
+/* Terrain: flying low over a wire mesh landscape toward a glowing horizon. */
+function drawTerrain({ c, w, h, t, a, b }: Ctx) {
+  c.clearRect(0, 0, w, h)
+  const hy = h * 0.46, cx = w * 0.5
+  const f = h * 0.9, camH = 1.25
+  const NX = 44, NZ = 30, span = 9, zNear = 0.9, dz = 0.45
+  const scroll = (t * 0.55) % dz
+  const offset = Math.floor((t * 0.55) / dz)
+
+  const sky = c.createRadialGradient(cx, hy, 0, cx, hy, w * 0.55)
+  sky.addColorStop(0, hexA(b, 0.26))
+  sky.addColorStop(0.5, hexA(a, 0.06))
+  sky.addColorStop(1, 'rgba(0,0,0,0)')
+  c.fillStyle = sky
+  c.fillRect(0, 0, w, hy + 2)
+
+  const height = (x: number, zi: number) => {
+    const valley = Math.min(1, Math.abs(x) / 2.2)
+    return valley * valley * (0.55 * Math.sin(x * 1.3 + zi * 0.5) + 0.45 * Math.sin(x * 2.9 - zi * 0.83) + 0.5 * Math.sin(zi * 0.31 + x * 0.6) + 1.1) * 0.62
+  }
+  const proj = (x: number, y: number, z: number): [number, number] => [cx + (x * f) / z, hy + ((camH - y) * f) / z]
+
+  c.lineWidth = 1
+  for (let j = NZ - 1; j >= 0; j--) {
+    const z = zNear + j * dz - scroll
+    if (z <= 0.2) continue
+    const zi = j + offset
+    const fade = Math.pow(1 - j / NZ, 1.6)
+    // the ridge line across, filled below so nearer ground hides what is behind it
+    c.beginPath()
+    for (let i = 0; i <= NX; i++) {
+      const x = (i / NX - 0.5) * 2 * span
+      const [px, py] = proj(x, height(x, zi), z)
+      if (i === 0) c.moveTo(px, py)
+      else c.lineTo(px, py)
+    }
+    c.strokeStyle = hexA(a, 0.06 + fade * 0.5)
+    c.stroke()
+    // lines running away from the camera, to the next row back
+    if (j < NZ - 1) {
+      const z2 = z + dz
+      c.beginPath()
+      for (let i = 0; i <= NX; i += 2) {
+        const x = (i / NX - 0.5) * 2 * span
+        const [x1, y1] = proj(x, height(x, zi), z)
+        const [x2, y2] = proj(x, height(x, zi + 1), z2)
+        c.moveTo(x1, y1)
+        c.lineTo(x2, y2)
       }
-    })
-    return cv
+      c.strokeStyle = hexA(b, 0.04 + fade * 0.26)
+      c.stroke()
+    }
   }
 
+  const line = c.createLinearGradient(0, 0, w, 0)
+  line.addColorStop(0, 'rgba(0,0,0,0)')
+  line.addColorStop(0.5, hexA(b, 0.7))
+  line.addColorStop(1, 'rgba(0,0,0,0)')
+  c.fillStyle = line
+  c.fillRect(0, hy - 0.5, w, 1.2)
+}
+
+/* Warp: a field of stars streaming past the camera. */
+function makeWarp() {
+  const N = 420
+  const stars = Array.from({ length: N }, () => ({ x: Math.random() * 2 - 1, y: Math.random() * 2 - 1, z: Math.random(), tint: Math.random() }))
+  let last = 0
   return ({ c, w, h, t, a, b }: Ctx) => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
-    const k = `${w}x${h}${a}${b}`
-    if (k !== key || !cache) { key = k; cache = build(w, h, a, b, dpr) }
-    const hy = h * 0.66
-    const cx = w * 0.5
+    const dt = Math.min(0.1, Math.max(0, t - last))
+    last = t
     c.clearRect(0, 0, w, h)
-    c.drawImage(cache, 0, 0, w, h)
-
-    // signs
-    for (const s of signs) {
-      const f = 0.55 + 0.45 * Math.sin(t * 1.3 + s.ph) * (Math.sin(t * 7.1 + s.ph * 3) > -0.92 ? 1 : 0.2)
-      c.shadowColor = s.col; c.shadowBlur = 14
-      c.fillStyle = hexA(s.col, 0.35 + f * 0.5)
-      c.fillRect(s.x, s.y, s.w, s.h)
-      c.shadowBlur = 0
-    }
-
-    // ground: dark glass with the city glow bleeding into it
-    const floor = c.createLinearGradient(0, hy, 0, h)
-    floor.addColorStop(0, hexA(b, 0.34))
-    floor.addColorStop(0.3, hexA(a, 0.08))
-    floor.addColorStop(1, '#030409')
-    c.fillStyle = '#030409'
-    c.fillRect(0, hy, w, h - hy)
-    c.fillStyle = floor
-    c.fillRect(0, hy, w, h - hy)
-
-    c.lineWidth = 1
-    const cols = 28
-    for (let i = -cols; i <= cols; i++) {
-      const fade = 1 - Math.min(1, Math.abs(i) / cols)
-      c.strokeStyle = hexA(a, 0.06 + fade * 0.3)
+    const cx = w * 0.58, cy = h * 0.5
+    const glow = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.5)
+    glow.addColorStop(0, hexA(a, 0.07))
+    glow.addColorStop(1, 'rgba(0,0,0,0)')
+    c.fillStyle = glow
+    c.fillRect(0, 0, w, h)
+    const speed = 0.11
+    for (const s of stars) {
+      const z0 = s.z
+      s.z -= speed * dt
+      if (s.z <= 0.03) { s.x = Math.random() * 2 - 1; s.y = Math.random() * 2 - 1; s.z = 1; continue }
+      const x0 = cx + (s.x / z0) * w * 0.5, y0 = cy + (s.y / z0) * w * 0.5
+      const zt = s.z - 0.012
+      const x1 = cx + (s.x / zt) * w * 0.5, y1 = cy + (s.y / zt) * w * 0.5
+      if (x1 < -50 || x1 > w + 50 || y1 < -50 || y1 > h + 50) continue
+      const near = 1 - s.z
+      c.strokeStyle = s.tint > 0.86 ? hexA(b, 0.25 + near * 0.6) : s.tint > 0.7 ? hexA(a, 0.25 + near * 0.6) : `rgba(225,232,255,${0.15 + near * 0.6})`
+      c.lineWidth = 0.6 + near * 1.6
       c.beginPath()
-      c.moveTo(cx + (i / cols) * w * 0.1, hy)
-      c.lineTo(cx + (i / cols) * w * 2.4, h)
+      c.moveTo(x0, y0)
+      c.lineTo(x1, y1)
       c.stroke()
     }
-    const rows = 16
-    const scroll = (t * 0.11) % 1
-    for (let j = 0; j < rows; j++) {
-      const p = (j + scroll) / rows
-      const y = hy + Math.pow(p, 2.3) * (h - hy)
-      c.strokeStyle = hexA(a, 0.05 + p * 0.4)
-      c.beginPath()
-      c.moveTo(0, y)
-      c.lineTo(w, y)
-      c.stroke()
-    }
-
-    // horizon light
-    const line = c.createLinearGradient(0, 0, w, 0)
-    line.addColorStop(0, 'rgba(0,0,0,0)')
-    line.addColorStop(0.5, hexA(b, 0.95))
-    line.addColorStop(1, 'rgba(0,0,0,0)')
-    c.shadowColor = b; c.shadowBlur = 18
-    c.fillStyle = line
-    c.fillRect(0, hy - 1, w, 2)
-    c.shadowBlur = 0
   }
 }
 
-function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' | 'ridge' }) {
+type CanvasKind = 'flow' | 'ridge' | 'globe' | 'terrain' | 'warp'
+const CANVAS_KINDS: CanvasKind[] = ['flow', 'ridge', 'globe', 'terrain', 'warp']
+
+function CanvasWallpaper({ kind }: { kind: CanvasKind }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const accent = usePrefs((s) => s.accent)
 
@@ -326,7 +246,7 @@ function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' | 'ridge'
     const c = canvas.getContext('2d')!
     const { value: a, second: b } = ACCENTS[accent]
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const draw = kind === 'city' ? makeCity() : kind === 'horizon' ? drawHorizon : kind === 'ridge' ? drawRidge : makeFlow()
+    const draw = kind === 'ridge' ? drawRidge : kind === 'globe' ? drawGlobe : kind === 'terrain' ? drawTerrain : kind === 'warp' ? makeWarp() : makeFlow()
     let raf = 0, last = 0, w = 0, h = 0
     const start = performance.now()
 
@@ -364,9 +284,18 @@ function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' | 'ridge'
 function Aurora() {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="aurora-blob" style={{ left: '-10%', top: '-20%', width: '60vw', height: '60vw', background: 'var(--accent)', opacity: 0.2, animationDuration: '34s' }} />
-      <div className="aurora-blob" style={{ right: '-15%', top: '10%', width: '55vw', height: '55vw', background: 'var(--accent-2)', opacity: 0.2, animationDuration: '46s', animationDirection: 'reverse' }} />
-      <div className="aurora-blob" style={{ left: '25%', bottom: '-40%', width: '70vw', height: '70vw', background: '#2a4bff', opacity: 0.16, animationDuration: '58s' }} />
+      <div className="aurora-blob" style={{ left: '-10%', top: '-20%', width: '60vw', height: '60vw', background: 'var(--accent)', opacity: 0.22, animationDuration: '19s' }} />
+      <div className="aurora-blob" style={{ right: '-15%', top: '10%', width: '55vw', height: '55vw', background: 'var(--accent-2)', opacity: 0.22, animationDuration: '25s', animationDirection: 'alternate-reverse' }} />
+      <div className="aurora-blob" style={{ left: '25%', bottom: '-40%', width: '70vw', height: '70vw', background: '#2a4bff', opacity: 0.18, animationDuration: '31s' }} />
+    </div>
+  )
+}
+
+function Dusk() {
+  return (
+    <div className="absolute inset-0 overflow-hidden" style={{ background: 'linear-gradient(180deg, #04050b 0%, #080a1c 40%, #140d2e 68%, #22103a 100%)' }}>
+      <div className="aurora-blob" style={{ left: '20%', bottom: '-46%', width: '80vw', height: '60vw', background: 'var(--accent-2)', opacity: 0.4, animationDuration: '23s' }} />
+      <div className="aurora-blob" style={{ right: '-18%', bottom: '-40%', width: '54vw', height: '46vw', background: 'var(--accent)', opacity: 0.22, animationDuration: '29s', animationDirection: 'alternate-reverse' }} />
     </div>
   )
 }
@@ -387,18 +316,9 @@ export function WallpaperArt({ id }: { id: WallpaperId }) {
         />
       </div>
     )
-  if (id === 'city' || id === 'horizon' || id === 'flow' || id === 'ridge') return <CanvasWallpaper key={id} kind={id} />
+  if ((CANVAS_KINDS as string[]).includes(id)) return <CanvasWallpaper key={id} kind={id as CanvasKind} />
   if (id === 'aurora') return <Aurora />
-  if (id === 'dusk')
-    return (
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(120% 55% at 62% 104%, color-mix(in oklab, var(--accent-2) 62%, transparent), transparent 64%), radial-gradient(70% 42% at 88% 92%, color-mix(in oklab, var(--accent) 28%, transparent), transparent 70%), linear-gradient(180deg, #04050b 0%, #080a1c 40%, #140d2e 68%, #22103a 100%)',
-        }}
-      />
-    )
+  if (id === 'dusk') return <Dusk />
   if (id === 'grid')
     return (
       <div className="absolute inset-0">
@@ -420,15 +340,7 @@ export function WallpaperArt({ id }: { id: WallpaperId }) {
         />
       </div>
     )
-  return (
-    <div
-      className="absolute inset-0"
-      style={{
-        background:
-          'radial-gradient(ellipse 70% 55% at 50% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent), radial-gradient(ellipse 60% 50% at 80% 100%, color-mix(in oklab, var(--accent-2) 8%, transparent), transparent)',
-      }}
-    />
-  )
+  return null
 }
 
 export function Wallpaper() {

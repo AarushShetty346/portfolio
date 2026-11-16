@@ -42,8 +42,8 @@ function DesktopIcons() {
                 }, 900)
               }
             }}
-            onDoubleClick={() => openApp(id)}
-            onKeyDown={(e) => e.key === 'Enter' && openApp(id)}
+            onDoubleClick={() => { openApp(id); setSelected(null) }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { openApp(id); setSelected(null) } }}
             className="group flex h-[92px] w-[88px] flex-col items-center gap-2 pt-2.5"
           >
             <span className="relative transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-active:scale-95">
@@ -109,7 +109,6 @@ function Welcome() {
 function Identity() {
   const clock24 = usePrefs((s) => s.clock24)
   const now = useNow()
-  const pinned = projects.filter((p) => p.featured).slice(0, 4)
   const time = formatTime(now, clock24)
   const [digits, suffix] = time.split(/\s/)
   const [tall, setTall] = useState(() => window.innerHeight >= 860)
@@ -127,28 +126,19 @@ function Identity() {
       transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className="absolute right-7 top-[58px] w-[272px]"
     >
-      <div className="flex items-end justify-between px-1">
-        <div className="display flex items-baseline gap-1.5 text-[42px] font-normal leading-none tracking-[0em] text-ink tabular-nums [text-shadow:0_2px_30px_rgb(0_0_0/0.6)]">
+      <div className="px-1 text-right">
+        <div className="display flex items-baseline justify-end gap-2 text-[42px] font-normal leading-none text-ink tabular-nums [text-shadow:0_2px_30px_rgb(0_0_0/0.6)]">
           {digits}
           {suffix && <span className="text-[13px] font-medium tracking-[0.14em] text-ink/55">{suffix}</span>}
         </div>
-        <div className="pb-1 text-right font-mono text-[10.5px] uppercase leading-[1.5] tracking-[0.16em] text-ink/60">
-          {now.toLocaleDateString([], { weekday: 'long' })}
-          <br />
-          {now.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
+        <div className="mt-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink/60">
+          {now.toLocaleDateString([], { weekday: 'long' })} · {now.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
       </div>
 
       <div className="glass mt-4 overflow-hidden rounded-[18px]">
         <div className="flex h-9 items-center justify-between border-b border-white/[0.07] px-3.5">
           <span className="label !text-ink/60">Identity</span>
-          <span className="flex items-center gap-1.5 text-[11px] text-ink/75">
-            <span className="relative flex size-1.5">
-              <span className="absolute inset-0 animate-ping rounded-full bg-term opacity-60" />
-              <span className="relative size-1.5 rounded-full bg-term" />
-            </span>
-            Open to internships
-          </span>
         </div>
 
         <div
@@ -166,22 +156,6 @@ function Identity() {
           <button onClick={() => openApp('resume')} className="h-9 text-ink/80 transition-colors hover:bg-white/[0.06] hover:text-ink">Resume</button>
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/[0.07] px-3.5 py-2.5">
-          <span className="label !text-ink/60">Pinned</span>
-          <div className="flex gap-2">
-            {pinned.map((p) => (
-              <button
-                key={p.slug}
-                title={p.name}
-                aria-label={`Open ${p.name}`}
-                onClick={() => openProject(p.slug)}
-                className="transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-95"
-              >
-                <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={30} />
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </motion.div>
   )
