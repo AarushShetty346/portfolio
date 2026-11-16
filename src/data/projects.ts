@@ -225,7 +225,11 @@ Next steps I have in mind: real historical candle data, a move to Vite, and a be
     repo: 'AarushShetty346/Shikshak',
     demo: 'https://shikshak-o0l8.onrender.com',
     stack: ['TypeScript', 'React', 'Node.js', 'Express', 'WebSockets', 'Bolna', 'Vitest', 'Playwright'],
-    shots: [],
+    hero: './shots/shikshak-home.jpg',
+    shots: [
+      { src: './shots/shikshak-home.jpg', caption: 'Start screen' },
+      { src: './shots/shikshak-onboarding.jpg', caption: 'Learner setup' },
+    ],
     overview: `Shikshak is a voice maths tutor for school students in India, classes 8 to 12. You talk to it in Hindi, English, Tamil or Telugu, and it explains a topic out loud while writing on a shared chalkboard: headings, worked steps, graphs and diagrams, timed with its voice.
 
 Then it is your turn. You solve the problem on the same board by hand, by typing or by sending a photo of your notebook. Shikshak reads your working, checks every line, circles the first step that went wrong and helps with hints rather than the answer.
@@ -311,7 +315,13 @@ Animations respect the reduced-motion setting on your device.`,
     repo: 'AarushShetty346/gnani-voice-app',
     video: 'https://youtu.be/DQaPu_4Ylbc',
     stack: ['Python', 'FastAPI', 'WebSockets', 'Gnani STT', 'Gnani TTS', 'JavaScript'],
-    shots: [],
+    hero: './shots/scamlingo-live.jpg',
+    shots: [
+      { src: './shots/scamlingo-live.jpg', caption: 'Live risk score and transcript' },
+      { src: './shots/scamlingo-alert.jpg', caption: 'Scam alert' },
+      { src: './shots/scamlingo-demos.jpg', caption: 'Demo calls' },
+      { src: './shots/scamlingo-home.jpg', caption: 'Home' },
+    ],
     overview: `ScamLingo is a live scam-call shield for Indian phone users. If a call feels off, you put it on speaker. ScamLingo listens for the language scammers use, such as "digital arrest" or "share the OTP", and warns you out loud in your own language before you share a code or send money.
 
 When the call ends you get a plain-language summary you can forward to family on WhatsApp. It handles calls in 10 Indian languages and code-mixed Hinglish.`,
