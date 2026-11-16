@@ -98,21 +98,21 @@ a { color: inherit; }
 
 .selectable { user-select: text; }
 
-/* Glass surface used by windows, dock, menus (web frosted-glass approximation). */
+/* Glass surface used by the dock, menus and panels (web frosted-glass approximation). */
 .glass {
   background:
-    linear-gradient(180deg, color-mix(in oklab, var(--accent) 7%, transparent), rgb(255 255 255 / 0.012) 38%),
-    rgb(8 10 22 / 0.8);
-  backdrop-filter: blur(26px) saturate(150%);
-  -webkit-backdrop-filter: blur(26px) saturate(150%);
-  border: 1px solid color-mix(in oklab, var(--accent) 22%, rgb(255 255 255 / 0.08));
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015) 42%),
+    rgb(10 12 20 / 0.76);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgb(255 255 255 / 0.09);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.07),
-    0 0 28px -14px color-mix(in oklab, var(--accent) 70%, transparent),
-    0 24px 70px -12px rgb(0 0 0 / 0.7);
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.45),
+    0 22px 60px -14px rgb(0 0 0 / 0.75);
 }
 @media (prefers-reduced-transparency: reduce) {
-  .glass { background: #0d0f17; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass, .win { background: #0d0f17; backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 /* Text helpers */
@@ -251,13 +251,99 @@ a { color: inherit; }
   mix-blend-mode: overlay;
 }
 
-/* Neon HUD frame: corner brackets on focused windows */
-.hud-corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  pointer-events: none;
-  border-color: var(--accent);
-  filter: drop-shadow(0 0 4px var(--accent));
-  transition: opacity 0.25s;
+/* ------------------------------------------------------------------
+   Window system
+   --app is the owning application's colour. It tints the title bar and
+   the ambient light under a focused window; everything else stays neutral.
+------------------------------------------------------------------- */
+.win {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-win);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.035), transparent 140px),
+    rgb(9 11 18 / 0.88);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  border: 1px solid rgb(255 255 255 / 0.075);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 12px 32px -12px rgb(0 0 0 / 0.65);
+  transition: box-shadow 0.28s var(--ease-out-expo), border-color 0.28s;
 }
+.win[data-focused='true'] {
+  border-color: rgb(255 255 255 / 0.13);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.11),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 22px 44px -14px rgb(0 0 0 / 0.8),
+    0 64px 120px -28px rgb(0 0 0 / 0.85),
+    0 50px 150px -60px color-mix(in oklab, var(--app) 60%, transparent);
+}
+.win[data-max='true'] { border-radius: 0; border-left: 0; border-right: 0; }
+
+.win-bar {
+  position: relative;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, var(--app) 11%, transparent), transparent 42%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.008));
+  border-bottom: 1px solid rgb(255 255 255 / 0.07);
+}
+/* a short line of the app's colour under its name: the only coloured edge on a window */
+.win-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 168px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--app), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.win[data-focused='true'] .win-bar::after { opacity: 0.9; }
+
+.win-key {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 24px;
+  border-radius: 7px;
+  color: var(--color-dim);
+  border: 1px solid rgb(255 255 255 / 0.07);
+  background: rgb(255 255 255 / 0.025);
+  transition: background 0.16s, color 0.16s, border-color 0.16s, transform 0.12s;
+}
+.win-key:hover { background: rgb(255 255 255 / 0.1); color: var(--color-ink); border-color: rgb(255 255 255 / 0.16); }
+.win-key:active { transform: scale(0.94); }
+.win-key[data-danger]:hover { background: var(--color-danger); border-color: transparent; color: white; }
+
+.win-foot {
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(0 0 0 / 0.22);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--color-faint);
+}
+
+/* Menus (top bar, context menu) */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 7px;
+  text-align: left;
+  font-size: 12.5px;
+  color: rgb(233 237 245 / 0.9);
+}
+.menu-item:hover { background: color-mix(in oklab, var(--accent) 16%, transparent); color: white; }
+.menu-item kbd { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--color-faint); }

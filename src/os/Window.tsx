@@ -52,6 +52,7 @@ export function WindowFrame({ win }: { win: Win }) {
   const focused = useFocusedId() === win.id
   const { focus, close, minimize, toggleMaximize, setBounds } = useWM.getState()
   const el = useRef<HTMLDivElement>(null)
+  const sizeEl = useRef<HTMLSpanElement>(null)
   const vp = useViewport()
   const [snap, setSnap] = useState(false)
 
@@ -127,6 +128,7 @@ export function WindowFrame({ win }: { win: Win }) {
         node.style.transform = `translate3d(${n.x}px, ${n.y}px, 0)`
         node.style.width = `${n.w}px`
         node.style.height = `${n.h}px`
+        if (sizeEl.current) sizeEl.current.textContent = `${Math.round(n.w)} x ${Math.round(n.h)}`
       },
       () => setBounds(win.id, n),
       getComputedStyle(e.currentTarget as HTMLElement).cursor,
@@ -153,77 +155,61 @@ export function WindowFrame({ win }: { win: Win }) {
       <motion.div
         className="relative size-full"
         style={{ transformOrigin: '50% 100%', pointerEvents: win.minimized ? 'none' : 'auto' }}
-        initial={{ opacity: 0, scale: 0.94, y: 16 }}
-        animate={win.minimized ? { opacity: 0, scale: 0.55, y: 220 } : { opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 10, transition: { duration: 0.16, ease: 'easeIn' } }}
-        transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+        initial={{ opacity: 0, scale: 0.95, y: 22 }}
+        animate={win.minimized ? { opacity: 0, scale: 0.5, y: 240 } : { opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.965, y: 8, transition: { duration: 0.17, ease: [0.4, 0, 1, 1] } }}
+        transition={{ type: 'spring', stiffness: 340, damping: 30, mass: 0.85 }}
       >
         <section
           role="dialog"
           aria-label={app.title}
-          className={cn(
-            'glass flex size-full flex-col overflow-hidden transition-[border-color,box-shadow] duration-200',
-            win.maximized ? 'rounded-none' : 'rounded-win',
-          )}
-          style={
-            focused
-              ? {
-                  borderColor: 'color-mix(in oklab, var(--accent) 62%, rgb(255 255 255 / 0.1))',
-                  boxShadow:
-                    'inset 0 1px 0 rgb(255 255 255 / 0.08), 0 30px 90px -14px rgb(0 0 0 / 0.85), 0 0 0 1px rgb(0 0 0 / 0.5), 0 0 34px -8px color-mix(in oklab, var(--accent) 65%, transparent), 0 0 90px -30px color-mix(in oklab, var(--accent-2) 70%, transparent)',
-                }
-              : undefined
-          }
+          className="win"
+          data-focused={focused}
+          data-max={win.maximized}
+          style={{ '--app': app.color } as CSSProperties}
         >
-          {/* accent hairline along the top edge of the focused window */}
-          <div
-            className="pointer-events-none absolute inset-x-10 top-0 h-px transition-opacity duration-300"
-            style={{
-              opacity: focused ? 0.9 : 0,
-              background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
-            }}
-          />
-
-          {!win.maximized && (
-            <>
-              <span className="hud-corner -left-px -top-px z-10 rounded-tl-[14px] border-l-2 border-t-2" style={{ opacity: focused ? 1 : 0 }} />
-              <span className="hud-corner -right-px -top-px z-10 rounded-tr-[14px] border-r-2 border-t-2" style={{ opacity: focused ? 1 : 0 }} />
-              <span className="hud-corner -bottom-px -left-px z-10 rounded-bl-[14px] border-b-2 border-l-2" style={{ opacity: focused ? 1 : 0 }} />
-              <span className="hud-corner -bottom-px -right-px z-10 rounded-br-[14px] border-b-2 border-r-2" style={{ opacity: focused ? 1 : 0 }} />
-            </>
-          )}
-
           <header
-            style={focused ? { background: 'linear-gradient(90deg, color-mix(in oklab, var(--accent) 14%, transparent), transparent 45%, color-mix(in oklab, var(--accent-2) 10%, transparent))' } : undefined}
-            className="relative flex h-10 shrink-0 items-center gap-2.5 border-b border-line pl-3 pr-1.5"
+            className="win-bar flex h-11 shrink-0 items-center gap-3 pl-3.5 pr-2.5"
             onPointerDown={startDrag}
             onDoubleClick={(e) => {
               if (!(e.target as HTMLElement).closest('[data-nodrag]')) toggleMaximize(win.id)
             }}
           >
-            <AppIcon icon={app.icon} color={app.color} color2={app.color2} variant={app.variant} size={20} />
-            <span
-              className={cn(
-                'truncate font-mono text-[11.5px] uppercase tracking-[0.14em] transition-colors',
-                focused ? 'text-ink' : 'text-faint',
-              )}
-            >
-              {app.title}
-            </span>
-            <div className="ml-auto flex items-center gap-0.5" data-nodrag>
-              <WinButton label="Minimize" onClick={() => minimize(win.id)}><Minus size={14} /></WinButton>
-              <WinButton label={win.maximized ? 'Restore' : 'Maximize'} onClick={() => toggleMaximize(win.id)}>
-                {win.maximized ? <Copy size={12} /> : <Square size={11} />}
-              </WinButton>
-              <WinButton label="Close" danger onClick={() => close(win.id)}><X size={14} /></WinButton>
+            <AppIcon icon={app.icon} color={app.color} color2={app.color2} variant={app.variant} size={22} />
+            <div className="flex min-w-0 items-baseline gap-2.5">
+              <span className={cn('truncate text-[13px] font-semibold tracking-[-0.005em] transition-colors', focused ? 'text-ink' : 'text-dim')}>
+                {app.title}
+              </span>
+              <span className="hidden truncate font-mono text-[10.5px] uppercase tracking-[0.12em] text-faint sm:inline">
+                {app.subtitle}
+              </span>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5" data-nodrag>
+              <button type="button" className="win-key" aria-label="Minimize" title="Minimize" onClick={() => minimize(win.id)}>
+                <Minus size={13} />
+              </button>
+              <button type="button" className="win-key" aria-label={win.maximized ? 'Restore' : 'Maximize'} title={win.maximized ? 'Restore' : 'Maximize'} onClick={() => toggleMaximize(win.id)}>
+                {win.maximized ? <Copy size={11} /> : <Square size={10} />}
+              </button>
+              <button type="button" className="win-key" data-danger aria-label="Close" title="Close" onClick={() => close(win.id)}>
+                <X size={13} />
+              </button>
             </div>
           </header>
 
-          <div className={cn('relative min-h-0 flex-1 transition-opacity duration-200', !focused && 'opacity-[0.86]')}>
+          <div className={cn('relative min-h-0 flex-1 transition-opacity duration-300', !focused && 'opacity-[0.82]')}>
             <Suspense fallback={<AppLoading title={app.title} />}>
               <App win={win} />
             </Suspense>
           </div>
+
+          <footer className="win-foot flex h-[22px] shrink-0 items-center justify-between px-3.5">
+            <span className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full" style={{ background: focused ? 'var(--app)' : 'rgb(255 255 255 / 0.2)' }} />
+              aarush.os / {app.title.toLowerCase()}
+            </span>
+            <span ref={sizeEl} className="tabular-nums">{Math.round(b.w)} x {Math.round(b.h)}</span>
+          </footer>
         </section>
 
         {!win.maximized &&
@@ -232,22 +218,5 @@ export function WindowFrame({ win }: { win: Win }) {
           ))}
       </motion.div>
     </div>
-  )
-}
-
-function WinButton({ children, label, danger, onClick }: { children: React.ReactNode; label: string; danger?: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className={cn(
-        'grid h-7 w-8 place-items-center rounded-md text-dim transition-colors active:scale-95',
-        danger ? 'hover:bg-danger/90 hover:text-white' : 'hover:bg-white/10 hover:text-ink',
-      )}
-    >
-      {children}
-    </button>
   )
 }

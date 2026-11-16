@@ -35,6 +35,8 @@ export const appById = (id: string) => APPS.find((a) => a.id === id)
 
 export interface ResolvedApp {
   title: string
+  /** One short line of context shown beside the title in the window bar. */
+  subtitle: string
   icon: IconType
   color: string
   color2?: string
@@ -50,13 +52,13 @@ export function resolveApp(win: Pick<Win, 'appId' | 'payload'>): ResolvedApp | u
     const p = projectBySlug(win.payload)
     if (!p) return undefined
     return {
-      title: appLabel(p), icon: glyphFor(p.glyph), color: p.accent, color2: p.accent2,
+      title: appLabel(p), subtitle: p.category, icon: glyphFor(p.glyph), color: p.accent, color2: p.accent2,
       variant: 'project', accent: p.accent, component: ProjectApp,
     }
   }
   const a = appById(win.appId)
   if (!a) return undefined
-  return { title: a.name, icon: a.icon, color: a.color, variant: 'system', component: a.component }
+  return { title: a.name, subtitle: a.blurb, icon: a.icon, color: a.color, variant: 'system', component: a.component }
 }
 
 export function openApp(id: string) {
