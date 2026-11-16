@@ -145,7 +145,7 @@ export const useFocusedId = () =>
 /* ------------------------------------------------------------------
    Preferences (persisted locally)
 ------------------------------------------------------------------- */
-export type WallpaperId = 'chicago' | 'milkyway' | 'globe' | 'terrain' | 'warp' | 'flow' | 'ridge' | 'grid' | 'aurora' | 'dusk'
+export type WallpaperId = 'milkyway' | 'newyork' | 'mumbai' | 'globe' | 'warp' | 'flow' | 'ridge' | 'grid' | 'aurora' | 'dusk'
 export type AccentId = 'cyan' | 'violet' | 'magenta' | 'green' | 'amber'
 
 export const ACCENTS: Record<AccentId, { name: string; value: string; second: string }> = {
@@ -156,17 +156,18 @@ export const ACCENTS: Record<AccentId, { name: string; value: string; second: st
   amber: { name: 'Amber', value: '#ffb657', second: '#ff5fd2' },
 }
 
-/** Photograph wallpapers. Both are public domain (NASA, US National Park Service). */
+/** Photograph wallpapers. All are public domain (NASA, US National Park Service). */
 export const PHOTOS: Partial<Record<WallpaperId, string>> = {
   milkyway: './wallpapers/milkyway.jpg',
-  chicago: './wallpapers/chicago.jpg',
+  newyork: './wallpapers/newyork.jpg',
+  mumbai: './wallpapers/mumbai.jpg',
 }
 
 export const WALLPAPERS: Record<WallpaperId, { name: string; note: string }> = {
-  chicago: { name: 'Chicago', note: 'The street grid at night, from orbit' },
   milkyway: { name: 'Milky Way', note: 'Night sky over the Rocky Mountains' },
-  globe: { name: 'Globe', note: 'A slowly turning sphere of points' },
-  terrain: { name: 'Terrain', note: 'Flying low over a wire landscape' },
+  newyork: { name: 'New York', note: 'The city at night, from orbit' },
+  mumbai: { name: 'Mumbai', note: 'The coast from Mumbai to Goa, from orbit' },
+  globe: { name: 'Globe', note: 'Drag it anywhere, click it for a ripple' },
   warp: { name: 'Warp', note: 'Stars streaming past' },
   flow: { name: 'Flow field', note: 'Particles tracing a slow current' },
   ridge: { name: 'Ridgelines', note: 'Slow lines of terrain' },
@@ -187,7 +188,7 @@ interface Prefs {
 }
 
 const DEFAULT_PREFS = {
-  wallpaper: 'chicago' as WallpaperId,
+  wallpaper: 'milkyway' as WallpaperId,
   accent: 'cyan' as AccentId,
   bootOnStart: true,
   clock24: false,
@@ -204,9 +205,9 @@ export const usePrefs = create<Prefs>()(
     }),
     {
       name: 'aarush-os:prefs',
-      version: 5,
-      // v5 trimmed the wallpaper list and made Chicago the default
-      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'chicago' as WallpaperId }),
+      version: 6,
+      // v6 made the Milky Way photograph the default
+      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'milkyway' as WallpaperId }),
     },
   ),
 )

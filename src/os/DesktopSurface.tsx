@@ -329,6 +329,7 @@ export function DesktopSurface() {
   return (
     <>
       <div
+        data-desktop="1"
         className="absolute inset-0"
         onContextMenu={(e) => {
           e.preventDefault()

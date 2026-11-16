@@ -102,28 +102,34 @@ a { color: inherit; }
 
 .selectable { user-select: text; }
 
-/* Frosted glass: the dock, the top bar sheets, the launcher and desktop panels.
-   A web approximation: a light translucent fill over a heavy blur, a bright
-   top edge and a soft shadow. Content behind stays visible as colour. */
+/* Liquid glass: the dock, the top bar sheets, the launcher and desktop panels.
+   A web approximation of a clear, thick pane: a faint white wash, a light
+   blur that keeps what is behind recognisable, lifted saturation, and bright
+   inner edges top and bottom so the rim catches light. */
 .glass {
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.05) 46%, rgb(255 255 255 / 0.07)),
-    rgb(22 24 40 / 0.46);
-  backdrop-filter: blur(34px) saturate(190%);
-  -webkit-backdrop-filter: blur(34px) saturate(190%);
+    linear-gradient(135deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.05) 34%, rgb(255 255 255 / 0.03) 62%, rgb(255 255 255 / 0.13)),
+    rgb(14 16 28 / 0.26);
+  backdrop-filter: blur(14px) saturate(190%) brightness(1.12);
+  -webkit-backdrop-filter: blur(14px) saturate(190%) brightness(1.12);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  box-shadow:
+    0 10px 36px rgb(0 0 0 / 0.38),
+    inset 0 1px 1px rgb(255 255 255 / 0.6),
+    inset 0 -1px 1px rgb(255 255 255 / 0.28),
+    inset 1px 0 1px rgb(255 255 255 / 0.12),
+    inset -1px 0 1px rgb(255 255 255 / 0.12),
+    inset 0 0 26px rgb(255 255 255 / 0.05);
+}
+/* A smaller pane resting on a glass sheet. */
+.glass-card {
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.15), rgb(255 255 255 / 0.05) 55%, rgb(255 255 255 / 0.09));
   border: 1px solid rgb(255 255 255 / 0.16);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.22),
-    inset 0 0 0 1px rgb(255 255 255 / 0.03),
-    0 0 0 1px rgb(0 0 0 / 0.28),
-    0 24px 60px -16px rgb(0 0 0 / 0.7);
-}
-/* A card resting on a glass sheet. */
-.glass-card {
-  border-radius: 13px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.045));
-  border: 1px solid rgb(255 255 255 / 0.12);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+    inset 0 1px 1px rgb(255 255 255 / 0.4),
+    inset 0 -1px 1px rgb(255 255 255 / 0.14),
+    0 2px 10px rgb(0 0 0 / 0.16);
 }
 @media (prefers-reduced-transparency: reduce) {
   .glass, .win { background: #0d0f17; backdrop-filter: none; -webkit-backdrop-filter: none; }

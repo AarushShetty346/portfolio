@@ -20,15 +20,12 @@ const photoPreview = (id: WallpaperId): React.CSSProperties => ({
 })
 
 const PREVIEW: Record<WallpaperId, React.CSSProperties> = {
-  chicago: photoPreview('chicago'),
   milkyway: photoPreview('milkyway'),
+  newyork: photoPreview('newyork'),
+  mumbai: photoPreview('mumbai'),
   globe: {
     background:
       'radial-gradient(circle at 62% 52%, transparent 0 27%, color-mix(in oklab, var(--accent) 70%, transparent) 27.5% 28.5%, transparent 29%), repeating-radial-gradient(circle at 62% 52%, transparent 0 5px, color-mix(in oklab, var(--accent) 26%, transparent) 5.5px, transparent 6.5px) 62% 52% / 56% 90% no-repeat, #05060b',
-  },
-  terrain: {
-    background:
-      'linear-gradient(180deg, transparent 45%, color-mix(in oklab, var(--accent-2) 80%, transparent) 45.5%, transparent 47%), repeating-linear-gradient(180deg, transparent 0 7px, color-mix(in oklab, var(--accent) 34%, transparent) 7.5px, transparent 8.5px) 0 100% / 100% 54% no-repeat, radial-gradient(60% 50% at 50% 46%, color-mix(in oklab, var(--accent-2) 30%, transparent), transparent), #05060b',
   },
   warp: {
     background:

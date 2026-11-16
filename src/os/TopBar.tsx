@@ -51,7 +51,7 @@ function Sheet({ align = 'left', width, phone, children }: { align?: 'left' | 'r
       {...pop}
       style={phone ? undefined : { width }}
       className={cn(
-        'glass rounded-[18px] p-2',
+        'glass rounded-[22px] p-2',
         phone ? 'fixed inset-x-2 top-[45px]' : cn('absolute top-[calc(100%+8px)]', align === 'left' ? 'left-0 origin-top-left' : 'right-0 origin-top-right'),
       )}
     >

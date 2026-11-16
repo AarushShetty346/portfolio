@@ -85,14 +85,23 @@ function makeFlow() {
 
 /* ---- 3D wallpapers: real perspective projection, drawn as points and lines ---- */
 
-/* Globe: a sphere of points turning slowly, with one tilted orbit. */
+/* Globe: a sphere of points turning slowly, with one tilted orbit.
+   It can be dragged anywhere on the desktop, and a click sends a band
+   of colour sweeping across it before it settles back. */
+export const globe = { fx: 0.6, fy: 0.52, ripples: [] as { x: number; y: number; at: number }[] }
+const globeRadius = (w: number, h: number) => Math.min(w, h) * 0.33
+
 function drawGlobe({ c, w, h, t, a, b }: Ctx) {
   c.clearRect(0, 0, w, h)
-  const cx = w * 0.6, cy = h * 0.52
-  const R = Math.min(w, h) * 0.33
+  const cx = w * globe.fx, cy = h * globe.fy
+  const R = globeRadius(w, h)
   const f = R * 3.2
   const ry = t * 0.1, rx = 0.38
   const cosY = Math.cos(ry), sinY = Math.sin(ry), cosX = Math.cos(rx), sinX = Math.sin(rx)
+  const nowMs = performance.now()
+  globe.ripples = globe.ripples.filter((r) => nowMs - r.at < 2400)
+  const waves = globe.ripples.map((r) => ({ x: r.x, y: r.y, age: (nowMs - r.at) / 1000 }))
+  const band = R * 0.42
 
   const halo = c.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.7)
   halo.addColorStop(0, hexA(a, 0.1))
@@ -106,9 +115,22 @@ function drawGlobe({ c, w, h, t, a, b }: Ctx) {
     const y2 = y * cosX - z1 * sinX, z2 = y * sinX + z1 * cosX
     const k = f / (f - z2)
     const depth = (z2 / R + 1) / 2
-    c.fillStyle = hexA(col, alpha * (0.12 + depth * 0.88))
-    const s = size * k
-    c.fillRect(cx + x1 * k - s / 2, cy + y2 * k - s / 2, s, s)
+    const sx = cx + x1 * k, sy = cy + y2 * k
+    let s = size * k
+    // a passing wave repaints the point in a shifting hue and swells it
+    let lit = 0, hue = 0
+    for (const wv of waves) {
+      const d = Math.hypot(sx - wv.x, sy - wv.y)
+      const near = 1 - Math.abs(d - wv.age * R * 1.7) / band
+      if (near > lit) { lit = near; hue = (d / R) * 150 + wv.age * 240 }
+    }
+    if (lit > 0) {
+      c.fillStyle = `hsla(${hue % 360}, 100%, ${58 + lit * 14}%, ${Math.min(1, (0.3 + depth * 0.7) * (0.55 + lit * 0.6))})`
+      s *= 1 + lit * 1.5
+    } else {
+      c.fillStyle = hexA(col, alpha * (0.12 + depth * 0.88))
+    }
+    c.fillRect(sx - s / 2, sy - s / 2, s, s)
   }
 
   for (let lat = -84; lat <= 84; lat += 12) {
@@ -135,68 +157,6 @@ function drawGlobe({ c, w, h, t, a, b }: Ctx) {
   }
   const st = t * 0.45
   put(Math.cos(st) * oR, Math.sin(st) * oR * 0.32, Math.sin(st) * oR, b, 5, 1)
-}
-
-/* Terrain: flying low over a wire mesh landscape toward a glowing horizon. */
-function drawTerrain({ c, w, h, t, a, b }: Ctx) {
-  c.clearRect(0, 0, w, h)
-  const hy = h * 0.46, cx = w * 0.5
-  const f = h * 0.9, camH = 1.25
-  const NX = 44, NZ = 30, span = 9, zNear = 0.9, dz = 0.45
-  const scroll = (t * 0.55) % dz
-  const offset = Math.floor((t * 0.55) / dz)
-
-  const sky = c.createRadialGradient(cx, hy, 0, cx, hy, w * 0.55)
-  sky.addColorStop(0, hexA(b, 0.26))
-  sky.addColorStop(0.5, hexA(a, 0.06))
-  sky.addColorStop(1, 'rgba(0,0,0,0)')
-  c.fillStyle = sky
-  c.fillRect(0, 0, w, hy + 2)
-
-  const height = (x: number, zi: number) => {
-    const valley = Math.min(1, Math.abs(x) / 2.2)
-    return valley * valley * (0.55 * Math.sin(x * 1.3 + zi * 0.5) + 0.45 * Math.sin(x * 2.9 - zi * 0.83) + 0.5 * Math.sin(zi * 0.31 + x * 0.6) + 1.1) * 0.62
-  }
-  const proj = (x: number, y: number, z: number): [number, number] => [cx + (x * f) / z, hy + ((camH - y) * f) / z]
-
-  c.lineWidth = 1
-  for (let j = NZ - 1; j >= 0; j--) {
-    const z = zNear + j * dz - scroll
-    if (z <= 0.2) continue
-    const zi = j + offset
-    const fade = Math.pow(1 - j / NZ, 1.6)
-    // the ridge line across, filled below so nearer ground hides what is behind it
-    c.beginPath()
-    for (let i = 0; i <= NX; i++) {
-      const x = (i / NX - 0.5) * 2 * span
-      const [px, py] = proj(x, height(x, zi), z)
-      if (i === 0) c.moveTo(px, py)
-      else c.lineTo(px, py)
-    }
-    c.strokeStyle = hexA(a, 0.06 + fade * 0.5)
-    c.stroke()
-    // lines running away from the camera, to the next row back
-    if (j < NZ - 1) {
-      const z2 = z + dz
-      c.beginPath()
-      for (let i = 0; i <= NX; i += 2) {
-        const x = (i / NX - 0.5) * 2 * span
-        const [x1, y1] = proj(x, height(x, zi), z)
-        const [x2, y2] = proj(x, height(x, zi + 1), z2)
-        c.moveTo(x1, y1)
-        c.lineTo(x2, y2)
-      }
-      c.strokeStyle = hexA(b, 0.04 + fade * 0.26)
-      c.stroke()
-    }
-  }
-
-  const line = c.createLinearGradient(0, 0, w, 0)
-  line.addColorStop(0, 'rgba(0,0,0,0)')
-  line.addColorStop(0.5, hexA(b, 0.7))
-  line.addColorStop(1, 'rgba(0,0,0,0)')
-  c.fillStyle = line
-  c.fillRect(0, hy - 0.5, w, 1.2)
 }
 
 /* Warp: a field of stars streaming past the camera. */
@@ -234,8 +194,8 @@ function makeWarp() {
   }
 }
 
-type CanvasKind = 'flow' | 'ridge' | 'globe' | 'terrain' | 'warp'
-const CANVAS_KINDS: CanvasKind[] = ['flow', 'ridge', 'globe', 'terrain', 'warp']
+type CanvasKind = 'flow' | 'ridge' | 'globe' | 'warp'
+const CANVAS_KINDS: CanvasKind[] = ['flow', 'ridge', 'globe', 'warp']
 
 function CanvasWallpaper({ kind }: { kind: CanvasKind }) {
   const ref = useRef<HTMLCanvasElement>(null)
@@ -246,7 +206,7 @@ function CanvasWallpaper({ kind }: { kind: CanvasKind }) {
     const c = canvas.getContext('2d')!
     const { value: a, second: b } = ACCENTS[accent]
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const draw = kind === 'ridge' ? drawRidge : kind === 'globe' ? drawGlobe : kind === 'terrain' ? drawTerrain : kind === 'warp' ? makeWarp() : makeFlow()
+    const draw = kind === 'ridge' ? drawRidge : kind === 'globe' ? drawGlobe : kind === 'warp' ? makeWarp() : makeFlow()
     let raf = 0, last = 0, w = 0, h = 0
     const start = performance.now()
 
@@ -269,12 +229,40 @@ function CanvasWallpaper({ kind }: { kind: CanvasKind }) {
       draw({ c, w, h, t: (now - start) / 1000, a, b })
     }
 
+    // The globe is the one wallpaper you can touch: drag it by the bare desktop, click it for a ripple.
+    let drag: { x: number; y: number; fx: number; fy: number; moved: number } | null = null
+    const onDown = (e: PointerEvent) => {
+      if (kind !== 'globe' || e.button !== 0 || !(e.target as HTMLElement).dataset?.desktop) return
+      if (Math.hypot(e.clientX - w * globe.fx, e.clientY - h * globe.fy) > globeRadius(w, h) * 1.2) return
+      drag = { x: e.clientX, y: e.clientY, fx: globe.fx, fy: globe.fy, moved: 0 }
+    }
+    const onMove = (e: PointerEvent) => {
+      if (!drag) return
+      drag.moved = Math.max(drag.moved, Math.hypot(e.clientX - drag.x, e.clientY - drag.y))
+      if (drag.moved < 5) return
+      document.body.style.cursor = 'grabbing'
+      globe.fx = Math.min(0.95, Math.max(0.05, drag.fx + (e.clientX - drag.x) / w))
+      globe.fy = Math.min(0.92, Math.max(0.08, drag.fy + (e.clientY - drag.y) / h))
+    }
+    const onUp = (e: PointerEvent) => {
+      if (!drag) return
+      if (drag.moved < 5) globe.ripples.push({ x: e.clientX, y: e.clientY, at: performance.now() })
+      drag = null
+      document.body.style.cursor = ''
+    }
+    window.addEventListener('pointerdown', onDown)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+
     resize()
     window.addEventListener('resize', resize)
     if (!still) raf = requestAnimationFrame(loop)
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
+      window.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
     }
   }, [kind, accent])
 
