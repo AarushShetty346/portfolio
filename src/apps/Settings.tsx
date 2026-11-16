@@ -43,27 +43,30 @@ function Toggle({ label, note, value, onChange }: { label: string; note?: string
       role="switch"
       aria-checked={value}
       onClick={() => onChange(!value)}
-      className="flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+      className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-white/[0.035]"
     >
       <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px] text-ink">{label}</span>
-        {note && <span className="block text-[12px] text-dim">{note}</span>}
+        <span className="block text-[13px] font-medium text-ink">{label}</span>
+        {note && <span className="mt-0.5 block text-[12px] leading-snug text-dim">{note}</span>}
       </span>
-      <span className={cn('relative h-[22px] w-[40px] shrink-0 rounded-full border transition-colors duration-200', value ? 'border-transparent bg-accent' : 'border-line-strong bg-white/5')}>
+      <span className={cn('relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors duration-200', value ? 'bg-accent' : 'bg-white/12')}>
         <motion.span
           layout
           transition={{ type: 'spring', stiffness: 600, damping: 34 }}
-          className={cn('absolute top-[2px] size-4 rounded-full', value ? 'right-[3px] bg-[#05060a]' : 'left-[3px] bg-dim')}
+          className={cn('absolute top-[3px] size-4 rounded-full shadow-[0_1px_3px_rgb(0_0_0/0.5)]', value ? 'right-[3px] bg-white' : 'left-[3px] bg-white/70')}
         />
       </span>
     </button>
   )
 }
 
-const Group = ({ title, children }: { title: string; children: ReactNode }) => (
+/** A titled section. By default its children sit in one ruled box, like a system settings list. */
+const Group = ({ title, bare, children }: { title: string; bare?: boolean; children: ReactNode }) => (
   <section className="mb-8">
-    <h2 className="label mb-3 !text-dim">{title}</h2>
-    {children}
+    <h2 className="label mb-2.5 !text-ink/60">{title}</h2>
+    {bare ? children : (
+      <div className="divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">{children}</div>
+    )}
   </section>
 )
 
@@ -86,7 +89,8 @@ export default function Settings() {
 
   return (
     <div className="flex h-full">
-      <aside className="w-[190px] shrink-0 border-r border-line bg-black/20 p-3">
+      <aside className="w-[200px] shrink-0 border-r border-white/[0.07] bg-black/25 p-3">
+        <div className="px-2.5 pb-3 pt-1 text-[15px] font-semibold tracking-tight text-ink">Settings</div>
         <div className="space-y-0.5">
           {PANES.map((p) => (
             <button
@@ -94,7 +98,7 @@ export default function Settings() {
               onClick={() => setPane(p.id)}
               className={cn('relative flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors', pane === p.id ? 'text-ink' : 'text-dim hover:bg-white/5 hover:text-ink')}
             >
-              {pane === p.id && <motion.span layoutId="settings-nav" className="absolute inset-0 rounded-lg bg-white/8" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+              {pane === p.id && <motion.span layoutId="settings-nav" className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.055]" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
               <p.icon size={15} className={cn('relative', pane === p.id && 'text-accent')} />
               <span className="relative">{p.label}</span>
             </button>
@@ -107,25 +111,28 @@ export default function Settings() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="os-scroll min-w-0 flex-1 p-7"
+        className="os-scroll min-w-0 flex-1 px-8 py-7"
       >
+        {pane !== 'about' && (
+          <h1 className="display mb-7 text-[26px] font-semibold tracking-[-0.01em] text-ink">{PANES.find((x) => x.id === pane)!.label}</h1>
+        )}
         {pane === 'appearance' && (
           <>
-            <Group title="Wallpaper">
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Group title="Wallpaper" bare>
+              <div className="grid grid-cols-3 gap-3">
                 {(Object.keys(WALLPAPERS) as WallpaperId[]).map((id) => {
                   const on = prefs.wallpaper === id
                   return (
                     <button key={id} onClick={() => prefs.set('wallpaper', id)} className="group text-left">
                       <div
-                        className={cn('relative aspect-[16/10] overflow-hidden rounded-xl border transition-all duration-200', on ? 'border-accent' : 'border-line group-hover:border-line-strong')}
+                        className={cn('relative aspect-[16/10] overflow-hidden rounded-[10px] border transition-all duration-200', on ? 'border-accent shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_22%,transparent)]' : 'border-white/[0.08] group-hover:border-white/20')}
                         style={PREVIEW[id]}
                       >
                         {on && (
                           <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-accent text-[#05060a]"><Check size={12} strokeWidth={3} /></span>
                         )}
                       </div>
-                      <div className="mt-2 text-[13px] text-ink">{WALLPAPERS[id].name}</div>
+                      <div className="mt-2 text-[13px] font-medium text-ink">{WALLPAPERS[id].name}</div>
                       <div className="text-[11.5px] text-faint">{WALLPAPERS[id].note}</div>
                     </button>
                   )
@@ -133,7 +140,7 @@ export default function Settings() {
               </div>
             </Group>
 
-            <Group title="Accent colour">
+            <Group title="Accent colour" bare>
               <div className="flex flex-wrap gap-2.5">
                 {(Object.keys(ACCENTS) as AccentId[]).map((id) => {
                   const a = ACCENTS[id]
@@ -165,7 +172,7 @@ export default function Settings() {
         {pane === 'desktop' && (
           <>
             <Group title="Desktop">
-              <Toggle label="Clock widget" note="Time, name and pinned project apps on the desktop" value={prefs.showWidgets} onChange={(v) => prefs.set('showWidgets', v)} />
+              <Toggle label="Identity panel" note="The clock, ID card and pinned project apps on the desktop" value={prefs.showWidgets} onChange={(v) => prefs.set('showWidgets', v)} />
               <Toggle label="Dock magnification" note="Icons grow as the pointer moves across the dock" value={prefs.dockMagnify} onChange={(v) => prefs.set('dockMagnify', v)} />
               <Toggle label="24-hour clock" value={prefs.clock24} onChange={(v) => prefs.set('clock24', v)} />
             </Group>
@@ -187,14 +194,14 @@ export default function Settings() {
 
         {pane === 'shortcuts' && (
           <Group title="Keyboard and pointer">
-            <div className="grid grid-cols-1 gap-x-8 lg:grid-cols-2">
+            <>
               {SHORTCUTS.map(([keys, what]) => (
-                <div key={keys} className="flex items-center justify-between gap-4 border-b border-line py-2.5">
+                <div key={keys} className="flex items-center justify-between gap-4 px-4 py-2.5">
                   <span className="text-[13px] text-ink/85">{what}</span>
-                  <kbd className="shrink-0 rounded-md border border-line bg-black/30 px-2 py-1 font-mono text-[11px] text-accent">{keys}</kbd>
+                  <kbd className="shrink-0 rounded-md bg-white/[0.07] px-2 py-1 font-mono text-[10.5px] text-ink/80">{keys}</kbd>
                 </div>
               ))}
-            </div>
+            </>
           </Group>
         )}
 
