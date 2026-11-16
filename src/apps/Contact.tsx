@@ -121,8 +121,7 @@ export default function Contact() {
               <input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-faint"
-                placeholder="Internship opportunity"
+                className="min-w-0 flex-1 bg-transparent text-[13.5px] text-ink outline-none"
               />
             </label>
             <textarea
