@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowUpRight, CircleAlert, GitCommitHorizontal, GitFork, RefreshCw, Search, Star } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, CircleAlert, GitCommitHorizontal, GitFork, RefreshCw, Search, Star } from 'lucide-react'
 import { profile } from '../data/profile'
 import { projects } from '../data/projects'
 import { langColor, timeAgo, useGh, type GhCommit, type GhLanguages, type GhRepo, type GhUser } from '../lib/github'
@@ -40,7 +40,7 @@ const Heading = ({ children, aside }: { children: string; aside?: string }) => (
   </div>
 )
 
-function RepoDetail({ repo }: { repo: GhRepo }) {
+function RepoDetail({ repo, onBack }: { repo: GhRepo; onBack: () => void }) {
   const langs = useGh<GhLanguages>(`/repos/${repo.full_name}/languages`)
   const commits = useGh<GhCommit[]>(`/repos/${repo.full_name}/commits?per_page=6`)
   const linked = projects.find((p) => p.repo?.toLowerCase() === repo.full_name.toLowerCase())
@@ -57,12 +57,15 @@ function RepoDetail({ repo }: { repo: GhRepo }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.28, ease }}
-      className="px-8 py-7"
+      className="px-5 py-6 @2xl/win:px-8 @2xl/win:py-7"
     >
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
+      <button onClick={onBack} className="mb-5 flex items-center gap-1.5 text-[12.5px] text-dim @2xl/win:hidden">
+        <ArrowLeft size={14} /> Repositories
+      </button>
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+        <div className="min-w-[60%] flex-1">
           <div className="font-mono text-[11px] tracking-[0.06em] text-faint">{repo.owner.login} /</div>
-          <h2 className="selectable mt-1 truncate font-mono text-[26px] font-medium tracking-[-0.02em] text-ink">{repo.name}</h2>
+          <h2 className="selectable mt-1 truncate font-mono text-[21px] font-medium tracking-[-0.02em] text-ink @2xl/win:text-[26px]">{repo.name}</h2>
         </div>
         {repo.homepage && <a className="btn shrink-0" href={repo.homepage} target="_blank" rel="noreferrer">Website <ArrowUpRight size={13} /></a>}
         <a className="btn btn-accent shrink-0" href={repo.html_url} target="_blank" rel="noreferrer"><GitHubMark size={14} /> Open</a>
@@ -73,9 +76,17 @@ function RepoDetail({ repo }: { repo: GhRepo }) {
       </p>
 
       {/* facts as one ruled strip instead of four boxes */}
-      <dl className="mt-6 grid grid-cols-4 border-y border-white/[0.07]">
+      <dl className="mt-6 grid grid-cols-2 border-y border-white/[0.07] @lg/win:grid-cols-4">
         {facts.map(([k, v], i) => (
-          <div key={k} className={cn('py-3.5', i > 0 && 'border-l border-white/[0.07] pl-4')}>
+          <div
+            key={k}
+            className={cn(
+              'border-white/[0.07] py-3.5',
+              i > 0 && '@lg/win:border-l @lg/win:pl-4',
+              i % 2 === 1 && '@max-lg/win:border-l @max-lg/win:pl-4',
+              i >= 2 && '@max-lg/win:border-t',
+            )}
+          >
             <dt className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-faint">{k}</dt>
             <dd className="mt-1.5 flex items-center gap-2 truncate text-[15px] font-medium text-ink">
               {k === 'Language' && repo.language && <span className="size-2 shrink-0 rounded-full" style={{ background: langColor(repo.language) }} />}
@@ -160,6 +171,8 @@ export default function GitHub() {
   }, [list, selected])
 
   const current = list.find((r) => r.id === selected)
+  // narrow windows and phones show one pane at a time: the index, then the repository
+  const [detail, setDetail] = useState(false)
 
   const langMix = useMemo(() => {
     const m = new Map<string, number>()
@@ -180,7 +193,7 @@ export default function GitHub() {
   return (
     <div className="flex h-full flex-col">
       {/* Profile band */}
-      <header className="flex shrink-0 items-center gap-6 border-b border-white/[0.07] bg-black/25 px-6 py-4">
+      <header className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3.5 border-b border-white/[0.07] bg-black/25 px-5 py-4 @2xl/win:px-6">
         <div className="flex min-w-0 items-center gap-3.5">
           <span className="grid size-11 shrink-0 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-ink"><GitHubMark size={22} /></span>
           <div className="min-w-0">
@@ -191,7 +204,7 @@ export default function GitHub() {
 
         <div className="flex shrink-0 items-stretch">
           {numbers.map(([k, v], i) => (
-            <div key={k} className={cn('px-5', i > 0 && 'border-l border-white/[0.08]')}>
+            <div key={k} className={cn('pr-5', i > 0 && 'border-l border-white/[0.08] pl-5')}>
               <div className="display text-[24px] font-medium leading-none tabular-nums text-ink">{v ?? <span className="text-faint">..</span>}</div>
               <div className="mt-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-faint">{k}</div>
             </div>
@@ -224,7 +237,7 @@ export default function GitHub() {
 
       <div className="flex min-h-0 flex-1">
         {/* Repository index */}
-        <aside className="flex w-[286px] shrink-0 flex-col border-r border-white/[0.07] bg-black/15">
+        <aside className={cn('w-full shrink-0 flex-col border-r border-white/[0.07] bg-black/15 @2xl/win:flex @2xl/win:w-[286px]', detail ? 'hidden' : 'flex')}>
           <div className="p-3">
             <label className="flex h-8 items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 transition-colors focus-within:border-accent/50">
               <Search size={12.5} className="text-faint" />
@@ -241,7 +254,7 @@ export default function GitHub() {
               return (
                 <button
                   key={r.id}
-                  onClick={() => setSelected(r.id)}
+                  onClick={() => { setSelected(r.id); setDetail(true) }}
                   className={cn('relative block w-full rounded-[10px] px-3 py-2.5 text-left transition-colors', !on && 'hover:bg-white/[0.04]')}
                 >
                   {on && <motion.span layoutId="gh-sel" className="absolute inset-0 rounded-[10px] border border-white/10 bg-white/[0.055]" transition={{ type: 'spring', stiffness: 480, damping: 40 }} />}
@@ -259,9 +272,9 @@ export default function GitHub() {
           </div>
         </aside>
 
-        <section className="os-scroll min-w-0 flex-1">
+        <section className={cn('os-scroll min-w-0 flex-1', !detail && 'hidden @2xl/win:block')}>
           {current ? (
-            <AnimatePresence mode="wait" initial={false}><RepoDetail key={current.id} repo={current} /></AnimatePresence>
+            <AnimatePresence mode="wait" initial={false}><RepoDetail key={current.id} repo={current} onBack={() => setDetail(false)} /></AnimatePresence>
           ) : repos.loading ? (
             <div className="space-y-4 p-8">
               <div className="skeleton h-8 w-1/2" />

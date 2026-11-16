@@ -96,8 +96,8 @@ export default function Monitor() {
   return (
     <div className="os-scroll @container h-full">
       {/* the one live instrument: how smoothly this interface is drawing */}
-      <div className="flex h-[168px] items-stretch border-b border-white/[0.07] bg-black/25">
-        <div className="flex w-[230px] shrink-0 flex-col justify-between p-6">
+      <div className="flex flex-col border-b border-white/[0.07] bg-black/25 @lg:h-[168px] @lg:flex-row @lg:items-stretch">
+        <div className="flex shrink-0 flex-col justify-between gap-5 p-6 @lg:w-[230px]">
           <div className="label !text-ink/60">Interface frame rate</div>
           <div>
             <div className="display flex items-baseline gap-2 text-[58px] font-light leading-none tracking-[-0.03em] tabular-nums text-ink">
@@ -109,7 +109,7 @@ export default function Monitor() {
             </div>
           </div>
         </div>
-        <div className="relative min-w-0 flex-1">
+        <div className="relative h-[120px] min-w-0 @lg:h-auto @lg:flex-1">
           <Graph data={fps} max={Math.max(60, ...fps)} />
           <div className="absolute bottom-2 right-4 font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">
             This page only. Not a reading of your hardware.
@@ -153,8 +153,8 @@ export default function Monitor() {
                     <span className={cn('size-1.5 rounded-full', state === 'Focused' ? 'animate-pulse-soft bg-term' : state === 'Running' ? 'bg-dim' : 'bg-faint')} />
                     {state}
                   </span>
-                  <span className="w-16 text-right font-mono text-[10px] text-faint">{Math.round(w.w)} x {Math.round(w.h)}</span>
-                  <button aria-label={`Close ${app.title}`} onClick={() => close(w.id)} className="win-key !h-7 !w-7 opacity-0 transition-opacity group-hover:opacity-100" data-danger>
+                  <span className="hidden w-16 text-right font-mono text-[10px] text-faint @md:block">{Math.round(w.w)} x {Math.round(w.h)}</span>
+                  <button aria-label={`Close ${app.title}`} onClick={() => close(w.id)} className="win-key !h-7 !w-7 opacity-0 transition-opacity group-hover:opacity-100 max-md:opacity-100" data-danger>
                     <X size={12} />
                   </button>
                 </motion.div>

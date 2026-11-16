@@ -88,15 +88,15 @@ export default function Settings() {
   const [pane, setPane] = useState<Pane>('appearance')
 
   return (
-    <div className="flex h-full">
-      <aside className="w-[200px] shrink-0 border-r border-white/[0.07] bg-black/25 p-3">
-        <div className="px-2.5 pb-3 pt-1 text-[15px] font-semibold tracking-tight text-ink">Settings</div>
-        <div className="space-y-0.5">
+    <div className="flex h-full flex-col @2xl/win:flex-row">
+      <aside className="shrink-0 border-b border-white/[0.07] bg-black/25 p-2 @2xl/win:w-[200px] @2xl/win:border-b-0 @2xl/win:border-r @2xl/win:p-3">
+        <div className="hidden px-2.5 pb-3 pt-1 text-[15px] font-semibold tracking-tight text-ink @2xl/win:block">Settings</div>
+        <div className="os-scroll flex gap-1 [scrollbar-width:none] @2xl/win:block @2xl/win:space-y-0.5">
           {PANES.map((p) => (
             <button
               key={p.id}
               onClick={() => setPane(p.id)}
-              className={cn('relative flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors', pane === p.id ? 'text-ink' : 'text-dim hover:bg-white/5 hover:text-ink')}
+              className={cn('relative flex h-9 shrink-0 items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors @2xl/win:w-full', pane === p.id ? 'text-ink' : 'text-dim hover:bg-white/5 hover:text-ink')}
             >
               {pane === p.id && <motion.span layoutId="settings-nav" className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.055]" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
               <p.icon size={15} className={cn('relative', pane === p.id && 'text-accent')} />
@@ -111,7 +111,7 @@ export default function Settings() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="os-scroll min-w-0 flex-1 px-8 py-7"
+        className="os-scroll min-h-0 min-w-0 flex-1 px-5 py-6 @2xl/win:px-8 @2xl/win:py-7"
       >
         {pane !== 'about' && (
           <h1 className="display mb-7 text-[26px] font-semibold tracking-[-0.01em] text-ink">{PANES.find((x) => x.id === pane)!.label}</h1>
@@ -119,7 +119,7 @@ export default function Settings() {
         {pane === 'appearance' && (
           <>
             <Group title="Wallpaper" bare>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 @lg/win:grid-cols-3">
                 {(Object.keys(WALLPAPERS) as WallpaperId[]).map((id) => {
                   const on = prefs.wallpaper === id
                   return (

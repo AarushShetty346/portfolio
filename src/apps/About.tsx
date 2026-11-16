@@ -17,10 +17,10 @@ export default function About() {
   return (
     <div className="os-scroll @container h-full">
       {/* Identity */}
-      <div className="relative overflow-hidden border-b border-line px-8 pb-7 pt-8">
+      <div className="relative overflow-hidden border-b border-line px-5 pb-7 pt-7 @xl:px-8 @xl:pt-8">
         <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 120% at 0% 0%, color-mix(in oklab, var(--accent-2) 14%, transparent), transparent 70%)' }} />
-        <motion.div {...rise(0)} className="relative flex items-center gap-8">
-          <HoloCard width={170} className="shrink-0" />
+        <motion.div {...rise(0)} className="relative flex flex-col gap-7 @xl:flex-row @xl:items-center @xl:gap-8">
+          <HoloCard width={170} className="shrink-0 self-center" />
           <div className="min-w-0">
             <h1 className="display selectable text-[34px] font-semibold leading-none tracking-tight text-ink">{profile.name}</h1>
             <p className="selectable mt-3 max-w-[52ch] text-[14.5px] leading-relaxed text-ink/80">{profile.headline}</p>
@@ -33,7 +33,7 @@ export default function About() {
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-8 gap-y-7 p-8 @2xl:grid-cols-[1.35fr_1fr]">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-7 p-5 @xl:p-8 @2xl:grid-cols-[1.35fr_1fr]">
         <motion.div {...rise(1)} className="space-y-7">
           <div>
             <SectionTitle>About</SectionTitle>

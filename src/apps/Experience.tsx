@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowUpRight, Award, BriefcaseBusiness, GitPullRequest, Trophy, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Award, BriefcaseBusiness, GitPullRequest, Trophy, type LucideIcon } from 'lucide-react'
 import { experience, type ExperienceItem, type ExperienceKind } from '../data/experience'
 import { projectBySlug } from '../data/projects'
 import { openProject } from '../os/apps'
@@ -23,7 +23,7 @@ const KINDS = Object.keys(KIND) as ExperienceKind[]
 const ease = [0.16, 1, 0.3, 1] as const
 const pad = (n: number) => String(n).padStart(2, '0')
 
-function Page({ item }: { item: ExperienceItem }) {
+function Page({ item, onBack }: { item: ExperienceItem; onBack: () => void }) {
   const k = KIND[item.kind]
   const p = projectBySlug(item.project)
   const path = (f: string) => `src/data/experience.ts > ${item.id} > ${f}`
@@ -44,22 +44,25 @@ function Page({ item }: { item: ExperienceItem }) {
     >
       {/* header band, lit in the entry's colour */}
       <header
-        className="relative overflow-hidden border-b border-white/[0.07] px-9 pb-8 pt-9"
+        className="relative overflow-hidden border-b border-white/[0.07] px-5 pb-7 pt-6 @2xl:px-9 @2xl:pb-8 @2xl:pt-9"
         style={{ background: 'radial-gradient(90% 140% at 0% 0%, color-mix(in oklab, var(--accent) 15%, transparent), transparent 62%)' }}
       >
         <k.icon aria-hidden size={190} strokeWidth={0.6} className="pointer-events-none absolute -right-8 -top-10 text-accent opacity-[0.09]" />
-        <motion.div {...rise(0)} className="flex items-center gap-3 font-mono text-[10.5px] uppercase tracking-[0.18em]">
+        <button onClick={onBack} className="relative mb-5 flex items-center gap-1.5 text-[12.5px] text-dim @2xl/win:hidden">
+          <ArrowLeft size={14} /> Timeline
+        </button>
+        <motion.div {...rise(0)} className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.18em]">
           <span className="flex items-center gap-2 text-accent"><k.icon size={13} /> {item.kind}</span>
           <span className="h-px w-6 bg-white/20" />
           <span className="text-dim">{item.period}</span>
         </motion.div>
-        <motion.h2 {...rise(1)} className="display selectable mt-4 max-w-[18ch] text-[38px] font-semibold leading-[1.02] tracking-[-0.015em] text-ink">
+        <motion.h2 {...rise(1)} className="display selectable mt-4 max-w-[18ch] text-[29px] font-semibold leading-[1.04] tracking-[-0.015em] text-ink @2xl:text-[38px]">
           {item.title}
         </motion.h2>
         <motion.div {...rise(2)} className="selectable mt-2.5 text-[14.5px] text-ink/65">{item.org}</motion.div>
       </header>
 
-      <div className="grid grid-cols-1 gap-x-10 gap-y-8 px-9 py-8 @2xl:grid-cols-[minmax(0,1fr)_200px]">
+      <div className="grid grid-cols-1 gap-x-10 gap-y-8 px-5 py-7 @2xl:grid-cols-[minmax(0,1fr)_200px] @2xl:px-9 @2xl:py-8">
         <div className="min-w-0">
           {item.summary ? (
             <motion.p {...rise(3)} className="selectable max-w-[58ch] text-[16px] leading-[1.65] text-ink/90">{item.summary}</motion.p>
@@ -130,10 +133,12 @@ export default function Experience() {
   const list = useMemo(() => experience.filter((e) => kind === 'All' || e.kind === kind), [kind])
   const [selected, setSelected] = useState(experience[0]?.id)
   const current = list.find((e) => e.id === selected) ?? list[0]
+  // narrow windows and phones show one pane at a time: the timeline, then the entry
+  const [detail, setDetail] = useState(false)
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-[292px] shrink-0 flex-col border-r border-white/[0.07] bg-black/25">
+      <aside className={cn('w-full shrink-0 flex-col border-r border-white/[0.07] bg-black/25 @2xl/win:flex @2xl/win:w-[292px]', detail ? 'hidden' : 'flex')}>
         <div className="px-4 pb-3 pt-4">
           <div className="flex items-baseline justify-between">
             <h1 className="text-[15px] font-semibold tracking-tight text-ink">Timeline</h1>
@@ -161,7 +166,7 @@ export default function Experience() {
             return (
               <button
                 key={e.id}
-                onClick={() => setSelected(e.id)}
+                onClick={() => { setSelected(e.id); setDetail(true) }}
                 className={cn('group relative flex w-full gap-3.5 rounded-[10px] py-3 pl-2 pr-3 text-left transition-colors', !on && 'hover:bg-white/[0.04]')}
               >
                 {on && <motion.span layoutId="exp-sel" className="absolute inset-0 rounded-[10px] border border-white/10 bg-white/[0.055]" transition={{ type: 'spring', stiffness: 480, damping: 40 }} />}
@@ -182,9 +187,9 @@ export default function Experience() {
         </div>
       </aside>
 
-      <section className="os-scroll min-w-0 flex-1">
+      <section className={cn('os-scroll min-w-0 flex-1', !detail && 'hidden @2xl/win:block')}>
         {current ? (
-          <AnimatePresence mode="wait" initial={false}><Page key={current.id} item={current} /></AnimatePresence>
+          <AnimatePresence mode="wait" initial={false}><Page key={current.id} item={current} onBack={() => setDetail(false)} /></AnimatePresence>
         ) : (
           <div className="grid h-full place-items-center text-[13px] text-dim">Nothing in this category yet.</div>
         )}

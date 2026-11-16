@@ -49,7 +49,7 @@ function Stage({ p, index, total, dir, go }: { p: Project; index: number; total:
       {/* the giant index numeral, half hidden behind everything */}
       <div
         aria-hidden
-        className="display pointer-events-none absolute -top-8 right-6 select-none text-[220px] font-semibold leading-none tracking-[-0.04em]"
+        className="display pointer-events-none absolute -top-4 right-4 select-none text-[130px] font-semibold leading-none tracking-[-0.04em] @2xl:-top-8 @2xl:right-6 @2xl:text-[220px]"
         style={{ color: 'transparent', WebkitTextStroke: '1px color-mix(in oklab, var(--accent) 30%, transparent)' }}
       >
         {pad(index + 1)}
@@ -88,8 +88,8 @@ function Stage({ p, index, total, dir, go }: { p: Project; index: number; total:
       )}
 
       {/* copy */}
-      <div className="absolute inset-y-0 left-0 flex w-full max-w-[470px] flex-col justify-end p-8 pb-[76px]">
-        <motion.div {...rise(0)} className="flex items-center gap-3">
+      <div className="absolute inset-y-0 left-0 flex w-full max-w-[470px] flex-col overflow-y-auto p-5 pb-[76px] [scrollbar-width:none] @2xl:p-8 @2xl:pb-[76px]">
+        <motion.div {...rise(0)} className="mt-auto flex items-center gap-3">
           <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={54} />
           <div>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">{appLabel(p)}</div>
@@ -99,7 +99,7 @@ function Stage({ p, index, total, dir, go }: { p: Project; index: number; total:
           </div>
         </motion.div>
 
-        <motion.h2 {...rise(1)} className="display mt-5 text-[46px] font-semibold leading-[0.98] tracking-[-0.015em] text-ink">
+        <motion.h2 {...rise(1)} className="display mt-5 text-[34px] font-semibold leading-[0.98] tracking-[-0.015em] text-ink @2xl:text-[46px]">
           {p.name}
         </motion.h2>
         <motion.p {...rise(2)} className="selectable mt-3.5 max-w-[38ch] text-[15px] leading-relaxed text-ink/75">
@@ -136,7 +136,7 @@ function Stage({ p, index, total, dir, go }: { p: Project; index: number; total:
       </div>
 
       {/* bottom rail: screenshots on the left, step to the neighbours on the right */}
-      <div className="absolute inset-x-0 bottom-0 flex h-[60px] items-center gap-3 border-t border-white/[0.07] bg-[#090b12]/70 px-8 backdrop-blur-md">
+      <div className="absolute inset-x-0 bottom-0 flex h-[60px] items-center gap-3 border-t border-white/[0.07] bg-[#090b12]/70 px-4 backdrop-blur-md @2xl:px-8">
         {shots.length > 1 && (
           <div className="hidden items-center gap-1.5 @3xl:flex">
             {shots.slice(0, 5).map((s, i) => (
@@ -203,7 +203,7 @@ export default function Projects() {
 
   return (
     <div
-      className="flex h-full outline-none"
+      className="flex h-full flex-col outline-none @2xl/win:flex-row"
       tabIndex={-1}
       onKeyDown={(e) => {
         if ((e.target as HTMLElement).tagName === 'INPUT') return
@@ -213,7 +213,7 @@ export default function Projects() {
       }}
     >
       {/* Shelf */}
-      <aside className="flex w-[248px] shrink-0 flex-col border-r border-white/[0.07] bg-black/25">
+      <aside className="hidden w-[248px] shrink-0 flex-col border-r border-white/[0.07] bg-black/25 @2xl/win:flex">
         <div className="px-4 pb-3 pt-4">
           <div className="flex items-baseline justify-between">
             <h1 className="text-[15px] font-semibold tracking-tight text-ink">Library</h1>
@@ -292,8 +292,22 @@ export default function Projects() {
         </div>
       </aside>
 
+      {/* Narrow windows and phones: the shelf becomes a strip of icons */}
+      <div className="os-scroll flex shrink-0 gap-1 border-b border-white/[0.07] bg-black/25 px-3 py-2 [scrollbar-width:none] @2xl/win:hidden">
+        {projects.map((p) => (
+          <button
+            key={p.slug}
+            aria-label={p.name}
+            onClick={() => select(p.slug)}
+            className={cn('shrink-0 rounded-[13px] border p-1.5 transition-colors', p.slug === current.slug ? 'border-white/12 bg-white/[0.08]' : 'border-transparent')}
+          >
+            <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={36} />
+          </button>
+        ))}
+      </div>
+
       {/* Stage */}
-      <section className="relative min-w-0 flex-1 bg-[#090b12]">
+      <section className="relative min-h-0 min-w-0 flex-1 bg-[#090b12]">
         <AnimatePresence initial={false}>
           <Stage key={current.slug} p={current} index={index} total={projects.length} dir={dir} go={go} />
         </AnimatePresence>

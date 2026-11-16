@@ -89,7 +89,7 @@ function Lightbox({ p, index, onClose, onNav }: { p: Project; index: number; onC
           <X size={15} />
         </button>
       </div>
-      <div className="relative flex min-h-0 flex-1 items-center justify-center px-14 pb-6">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 pb-6 @lg/win:px-14">
         <motion.img
           key={shot.src}
           src={shot.src}
@@ -128,9 +128,11 @@ export default function ProjectApp({ win }: AppProps) {
   const nav = (d: number) => setLight((i) => (i === null ? i : (i + d + p.shots.length) % p.shots.length))
 
   return (
-    <div className="relative flex h-full">
+    <div className="relative h-full">
+     {/* side by side in a wide window; one scrolling column in a narrow one */}
+     <div className="os-scroll flex h-full flex-col @2xl/win:flex-row @2xl/win:overflow-hidden">
       {/* Identity rail */}
-      <aside className="flex w-[278px] shrink-0 flex-col border-r border-line bg-black/20">
+      <aside className="flex shrink-0 flex-col border-b border-line bg-black/20 @2xl/win:w-[278px] @2xl/win:border-b-0 @2xl/win:border-r">
         <Motif kind={p.motif} seed={p.slug} className="h-[132px] shrink-0 border-b border-line" />
         <div className="os-scroll -mt-10 flex-1 px-5 pb-5">
           <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.08 }} className="w-fit">
@@ -172,13 +174,13 @@ export default function ProjectApp({ win }: AppProps) {
       </aside>
 
       {/* Content */}
-      <section className="flex min-w-0 flex-1 flex-col">
-        <nav className="flex h-[46px] shrink-0 items-end gap-1 border-b border-line px-5">
+      <section className="flex min-w-0 flex-col @2xl/win:flex-1">
+        <nav className="os-scroll flex h-[46px] shrink-0 items-end gap-1 border-b border-line px-2 [scrollbar-width:none] @2xl/win:px-5">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={cn('relative h-[38px] px-3 text-[13px] transition-colors', tab === t ? 'text-ink' : 'text-dim hover:text-ink')}
+              className={cn('relative h-[38px] shrink-0 px-3 text-[13px] transition-colors', tab === t ? 'text-ink' : 'text-dim hover:text-ink')}
             >
               {t}
               {t === 'Gallery' && p.shots.length > 0 && <span className="ml-1.5 font-mono text-[10.5px] text-faint">{p.shots.length}</span>}
@@ -187,7 +189,7 @@ export default function ProjectApp({ win }: AppProps) {
           ))}
         </nav>
 
-        <div className="os-scroll flex-1">
+        <div className="os-scroll @2xl/win:flex-1">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={tab}
@@ -195,7 +197,7 @@ export default function ProjectApp({ win }: AppProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="p-6"
+              className="p-5 @2xl/win:p-6"
             >
               {tab === 'Overview' && (
                 <div className="space-y-7">
@@ -273,9 +275,9 @@ export default function ProjectApp({ win }: AppProps) {
 
               {tab === 'Gallery' &&
                 (p.shots.length ? (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 @lg/win:grid-cols-2">
                     {p.shots.map((s, i) => (
-                      <button key={s.src} onClick={() => setLight(i)} className={cn('group text-left', i === 0 && p.shots.length % 2 === 1 && 'col-span-2')}>
+                      <button key={s.src} onClick={() => setLight(i)} className={cn('group text-left', i === 0 && p.shots.length % 2 === 1 && '@lg/win:col-span-2')}>
                         <Shot src={s.src} alt={s.caption ?? p.name}
                           className={cn('w-full rounded-xl border border-line transition-[border-color] duration-200 group-hover:border-accent/60', i === 0 && p.shots.length % 2 === 1 ? 'aspect-[16/7]' : 'aspect-[16/10]')} />
                         {s.caption && <div className="mt-2 text-[12px] text-dim transition-colors group-hover:text-ink">{s.caption}</div>}
@@ -296,6 +298,7 @@ export default function ProjectApp({ win }: AppProps) {
           </AnimatePresence>
         </div>
       </section>
+     </div>
 
       <AnimatePresence>
         {light !== null && <Lightbox p={p} index={light} onClose={() => setLight(null)} onNav={nav} />}
