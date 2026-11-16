@@ -168,9 +168,9 @@ export function WindowFrame({ win }: { win: Win }) {
           style={
             focused
               ? {
-                  borderColor: 'color-mix(in oklab, var(--accent) 26%, rgb(255 255 255 / 0.1))',
+                  borderColor: 'color-mix(in oklab, var(--accent) 62%, rgb(255 255 255 / 0.1))',
                   boxShadow:
-                    'inset 0 1px 0 rgb(255 255 255 / 0.08), 0 30px 90px -14px rgb(0 0 0 / 0.85), 0 0 60px -30px color-mix(in oklab, var(--accent) 60%, transparent)',
+                    'inset 0 1px 0 rgb(255 255 255 / 0.08), 0 30px 90px -14px rgb(0 0 0 / 0.85), 0 0 0 1px rgb(0 0 0 / 0.5), 0 0 34px -8px color-mix(in oklab, var(--accent) 65%, transparent), 0 0 90px -30px color-mix(in oklab, var(--accent-2) 70%, transparent)',
                 }
               : undefined
           }
@@ -184,7 +184,17 @@ export function WindowFrame({ win }: { win: Win }) {
             }}
           />
 
+          {!win.maximized && (
+            <>
+              <span className="hud-corner -left-px -top-px z-10 rounded-tl-[14px] border-l-2 border-t-2" style={{ opacity: focused ? 1 : 0 }} />
+              <span className="hud-corner -right-px -top-px z-10 rounded-tr-[14px] border-r-2 border-t-2" style={{ opacity: focused ? 1 : 0 }} />
+              <span className="hud-corner -bottom-px -left-px z-10 rounded-bl-[14px] border-b-2 border-l-2" style={{ opacity: focused ? 1 : 0 }} />
+              <span className="hud-corner -bottom-px -right-px z-10 rounded-br-[14px] border-b-2 border-r-2" style={{ opacity: focused ? 1 : 0 }} />
+            </>
+          )}
+
           <header
+            style={focused ? { background: 'linear-gradient(90deg, color-mix(in oklab, var(--accent) 14%, transparent), transparent 45%, color-mix(in oklab, var(--accent-2) 10%, transparent))' } : undefined}
             className="relative flex h-10 shrink-0 items-center gap-2.5 border-b border-line pl-3 pr-1.5"
             onPointerDown={startDrag}
             onDoubleClick={(e) => {
