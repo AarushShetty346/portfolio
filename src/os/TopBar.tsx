@@ -102,7 +102,7 @@ function ControlCentre({ phone }: { phone: boolean }) {
         </div>
         <div className="mt-2.5 border-t border-line pt-2.5">
           <span className="label">Wallpaper</span>
-          <div className="mt-2 grid grid-cols-5 rounded-md border border-line p-0.5">
+          <div className="mt-2 grid grid-cols-4 gap-y-0.5 rounded-md border border-line p-0.5">
             {wallpapers.map((id) => (
               <button
                 key={id}

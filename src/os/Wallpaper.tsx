@@ -93,6 +93,45 @@ function drawHorizon({ c, w, h, t, a, b }: Ctx) {
   c.fillRect(0, hy - 0.5, w, 1.2)
 }
 
+/* Ridgelines: stacked lines of terrain drifting slowly, nearer ones brighter.
+   Each ridge hides the ones behind it, so the lines never tangle. */
+function drawRidge({ c, w, h, t, a, b }: Ctx) {
+  c.clearRect(0, 0, w, h)
+  const top = h * 0.5
+  const n = 22
+  const glow = c.createLinearGradient(0, top - h * 0.2, 0, h)
+  glow.addColorStop(0, 'rgba(0,0,0,0)')
+  glow.addColorStop(1, hexA(b, 0.1))
+  c.fillStyle = glow
+  c.fillRect(0, 0, w, h)
+  c.lineWidth = 1
+  for (let i = 0; i < n; i++) {
+    const p = i / (n - 1)
+    const base = top + Math.pow(p, 1.5) * (h - top) * 1.02
+    const amp = 10 + p * 54
+    c.beginPath()
+    for (let x = -10; x <= w + 10; x += 10) {
+      const u = x / w
+      // tallest toward the right, so the icon column on the left stays calm
+      const lift = 0.35 + 0.65 * Math.pow(u, 1.3)
+      const y =
+        base -
+        amp * lift * (0.5 + 0.5 * Math.sin(u * 5.2 + i * 0.55 + t * 0.07)) *
+          (0.55 + 0.45 * Math.sin(u * 11.3 - i * 0.9 - t * 0.045)) -
+        amp * 0.18 * Math.sin(u * 23 + i * 1.7 + t * 0.09)
+      if (x === -10) c.moveTo(x, y)
+      else c.lineTo(x, y)
+    }
+    c.strokeStyle = hexA(i % 5 === 3 ? b : a, 0.1 + p * 0.42)
+    c.stroke()
+    c.lineTo(w + 10, h + 10)
+    c.lineTo(-10, h + 10)
+    c.closePath()
+    c.fillStyle = '#05060b'
+    c.fill()
+  }
+}
+
 /* Flow field: particles following a slow analytic current, leaving trails. */
 interface P { x: number; y: number; life: number; hue: number }
 function makeFlow() {
@@ -278,7 +317,7 @@ function makeCity() {
   }
 }
 
-function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' }) {
+function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' | 'ridge' }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const accent = usePrefs((s) => s.accent)
 
@@ -287,7 +326,7 @@ function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' }) {
     const c = canvas.getContext('2d')!
     const { value: a, second: b } = ACCENTS[accent]
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const draw = kind === 'city' ? makeCity() : kind === 'horizon' ? drawHorizon : makeFlow()
+    const draw = kind === 'city' ? makeCity() : kind === 'horizon' ? drawHorizon : kind === 'ridge' ? drawRidge : makeFlow()
     let raf = 0, last = 0, w = 0, h = 0
     const start = performance.now()
 
@@ -333,8 +372,39 @@ function Aurora() {
 }
 
 export function WallpaperArt({ id }: { id: WallpaperId }) {
-  if (id === 'city' || id === 'horizon' || id === 'flow') return <CanvasWallpaper key={id} kind={id} />
+  if (id === 'city' || id === 'horizon' || id === 'flow' || id === 'ridge') return <CanvasWallpaper key={id} kind={id} />
   if (id === 'aurora') return <Aurora />
+  if (id === 'dusk')
+    return (
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(120% 55% at 62% 104%, color-mix(in oklab, var(--accent-2) 62%, transparent), transparent 64%), radial-gradient(70% 42% at 88% 92%, color-mix(in oklab, var(--accent) 28%, transparent), transparent 70%), linear-gradient(180deg, #04050b 0%, #080a1c 40%, #140d2e 68%, #22103a 100%)',
+        }}
+      />
+    )
+  if (id === 'grid')
+    return (
+      <div className="absolute inset-0">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(60% 55% at 78% 70%, color-mix(in oklab, var(--accent) 13%, transparent), transparent 70%), radial-gradient(45% 40% at 20% 100%, color-mix(in oklab, var(--accent-2) 10%, transparent), transparent 70%), #06070c',
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgb(255 255 255 / 0.16) 1px, transparent 1.5px)',
+            backgroundSize: '26px 26px',
+            maskImage: 'radial-gradient(90% 80% at 70% 60%, black, transparent)',
+            WebkitMaskImage: 'radial-gradient(90% 80% at 70% 60%, black, transparent)',
+          }}
+        />
+      </div>
+    )
   return (
     <div
       className="absolute inset-0"
