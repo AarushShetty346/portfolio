@@ -45,30 +45,31 @@ interface AppIconProps {
   className?: string
 }
 
-/** The rounded tile used everywhere an application is represented. */
+/** The tile used everywhere an application is represented.
+    System apps: a dark, lit-from-above tile with a tinted glyph.
+    Project apps: a filled tile in the project's own two colours. */
 export function AppIcon({ icon: Icon, color, color2, size = 48, variant = 'system', className }: AppIconProps) {
   const filled = variant === 'project'
   const style: CSSProperties = {
     width: size,
     height: size,
-    borderRadius: size * 0.27,
+    borderRadius: size * 0.265,
     background: filled
-      ? `linear-gradient(140deg, ${color} 0%, ${color2 ?? color} 100%)`
-      : `linear-gradient(150deg, color-mix(in oklab, ${color} 22%, #121521) 0%, #0c0e15 72%)`,
+      ? `linear-gradient(145deg, color-mix(in oklab, ${color} 88%, white) 0%, ${color} 38%, ${color2 ?? color} 100%)`
+      : `radial-gradient(130% 95% at 28% 0%, color-mix(in oklab, ${color} 30%, #1b2030) 0%, #10131d 52%, #090b12 100%)`,
     boxShadow: filled
-      ? `inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 -${size * 0.12}px ${size * 0.25}px rgb(0 0 0 / 0.22), 0 ${size * 0.12}px ${size * 0.4}px -${size * 0.12}px color-mix(in oklab, ${color} 55%, transparent)`
-      : `inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px color-mix(in oklab, ${color} 30%, rgb(255 255 255 / 0.06)), 0 ${size * 0.14}px ${size * 0.36}px -${size * 0.1}px rgb(0 0 0 / 0.7)`,
-    color: filled ? '#07080c' : color,
+      ? `inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 -${size * 0.16}px ${size * 0.3}px rgb(0 0 0 / 0.2), 0 ${size * 0.1}px ${size * 0.3}px -${size * 0.1}px rgb(0 0 0 / 0.8)`
+      : `inset 0 1px 0 rgb(255 255 255 / 0.16), inset 0 0 0 1px color-mix(in oklab, ${color} 22%, rgb(255 255 255 / 0.07)), inset 0 -${size * 0.2}px ${size * 0.3}px rgb(0 0 0 / 0.35), 0 ${size * 0.1}px ${size * 0.3}px -${size * 0.1}px rgb(0 0 0 / 0.85)`,
+    color: filled ? '#06070b' : `color-mix(in oklab, ${color} 82%, white)`,
   }
   return (
     <span className={cn('relative grid shrink-0 place-items-center overflow-hidden', className)} style={style}>
-      {filled && (
-        <span
-          className="absolute inset-0 opacity-30"
-          style={{ background: 'repeating-linear-gradient(135deg, rgb(255 255 255 / 0.5) 0 1px, transparent 1px 5px)' }}
-        />
-      )}
-      <Icon size={Math.round(size * 0.48)} strokeWidth={filled ? 2 : 1.6} className="relative" />
+      {/* soft sheen across the top half, the same on every icon */}
+      <span
+        className="absolute inset-x-0 top-0 h-1/2"
+        style={{ background: `linear-gradient(180deg, rgb(255 255 255 / ${filled ? 0.26 : 0.07}), transparent)` }}
+      />
+      <Icon size={Math.round(size * 0.46)} strokeWidth={filled ? 2.1 : 1.7} className="relative" />
     </span>
   )
 }
