@@ -16,6 +16,10 @@ const PANES: { id: Pane; label: string; icon: LucideIcon }[] = [
 
 /* Still previews of each wallpaper, drawn with CSS only. */
 const PREVIEW: Record<WallpaperId, React.CSSProperties> = {
+  city: {
+    background:
+      'linear-gradient(180deg, transparent 65%, color-mix(in oklab, var(--accent-2) 90%, transparent) 65.5%, transparent 67%), repeating-linear-gradient(90deg, #06061a 0 9px, transparent 9px 12px, #0b0a26 12px 26px, transparent 26px 28px) 0 38% / 100% 28% no-repeat, linear-gradient(180deg, #04050d 0%, #0a0a24 40%, color-mix(in oklab, var(--accent-2) 45%, #0a0a24) 66%, #030409 67%, color-mix(in oklab, var(--accent) 16%, #030409) 100%)',
+  },
   horizon: {
     background:
       'linear-gradient(180deg, transparent 59%, color-mix(in oklab, var(--accent) 80%, transparent) 59.5%, transparent 61%), radial-gradient(circle at 50% 62%, color-mix(in oklab, var(--accent-2) 45%, transparent) 0 26%, transparent 27%), repeating-linear-gradient(90deg, color-mix(in oklab, var(--accent) 22%, transparent) 0 1px, transparent 1px 14px), #07080d',

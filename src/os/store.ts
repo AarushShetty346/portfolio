@@ -145,11 +145,11 @@ export const useFocusedId = () =>
 /* ------------------------------------------------------------------
    Preferences (persisted locally)
 ------------------------------------------------------------------- */
-export type WallpaperId = 'horizon' | 'flow' | 'aurora' | 'obsidian'
+export type WallpaperId = 'city' | 'horizon' | 'flow' | 'aurora' | 'obsidian'
 export type AccentId = 'cyan' | 'violet' | 'magenta' | 'green' | 'amber'
 
 export const ACCENTS: Record<AccentId, { name: string; value: string; second: string }> = {
-  cyan: { name: 'Electric cyan', value: '#3ee6ff', second: '#b07cff' },
+  cyan: { name: 'Electric cyan', value: '#3ee6ff', second: '#ff4fd8' },
   violet: { name: 'Neon violet', value: '#a98bff', second: '#3ee6ff' },
   magenta: { name: 'Magenta', value: '#ff5fd2', second: '#3ee6ff' },
   green: { name: 'Terminal green', value: '#5dffa8', second: '#3ee6ff' },
@@ -157,6 +157,7 @@ export const ACCENTS: Record<AccentId, { name: string; value: string; second: st
 }
 
 export const WALLPAPERS: Record<WallpaperId, { name: string; note: string }> = {
+  city: { name: 'Neon city', note: 'Skyline over a moving grid' },
   horizon: { name: 'Horizon', note: 'Drifting perspective grid' },
   flow: { name: 'Flow field', note: 'Particles tracing a slow current' },
   aurora: { name: 'Aurora', note: 'Soft moving light' },
@@ -178,7 +179,7 @@ interface Prefs {
 }
 
 const DEFAULT_PREFS = {
-  wallpaper: 'horizon' as WallpaperId,
+  wallpaper: 'city' as WallpaperId,
   accent: 'cyan' as AccentId,
   scanlines: true,
   grain: true,
@@ -196,7 +197,12 @@ export const usePrefs = create<Prefs>()(
       set: (k, v) => set({ [k]: v } as Partial<Prefs>),
       reset: () => set({ ...DEFAULT_PREFS }),
     }),
-    { name: 'aarush-os:prefs', version: 1 },
+    {
+      name: 'aarush-os:prefs',
+      version: 2,
+      // v2 introduced the Neon city wallpaper as the default look
+      migrate: (state) => ({ ...(state as Prefs), wallpaper: 'city' as WallpaperId }),
+    },
   ),
 )
 
