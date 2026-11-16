@@ -281,13 +281,12 @@ function makeCity() {
 function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const accent = usePrefs((s) => s.accent)
-  const reduce = usePrefs((s) => s.reduceMotion)
 
   useEffect(() => {
     const canvas = ref.current!
     const c = canvas.getContext('2d')!
     const { value: a, second: b } = ACCENTS[accent]
-    const still = reduce || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const draw = kind === 'city' ? makeCity() : kind === 'horizon' ? drawHorizon : makeFlow()
     let raf = 0, last = 0, w = 0, h = 0
     const start = performance.now()
@@ -318,7 +317,7 @@ function CanvasWallpaper({ kind }: { kind: 'city' | 'horizon' | 'flow' }) {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
     }
-  }, [kind, accent, reduce])
+  }, [kind, accent])
 
   return <canvas ref={ref} className="absolute inset-0 size-full" />
 }
@@ -349,15 +348,13 @@ export function WallpaperArt({ id }: { id: WallpaperId }) {
 
 export function Wallpaper() {
   const id = usePrefs((s) => s.wallpaper)
-  const scanlines = usePrefs((s) => s.scanlines)
-  const grain = usePrefs((s) => s.grain)
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden bg-void">
       <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #07080d 0%, #05060a 60%, #030407 100%)' }} />
       <WallpaperArt id={id} />
       <div className="vignette absolute inset-0" />
-      {grain && <div className="grain absolute inset-0" />}
-      {scanlines && <div className="scanlines absolute inset-0" />}
+      {/* scanlines are part of the look, not a preference */}
+      <div className="scanlines absolute inset-0" />
     </div>
   )
 }

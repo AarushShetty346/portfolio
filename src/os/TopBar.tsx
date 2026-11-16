@@ -73,23 +73,6 @@ const ago = (t: number) => {
   return s < 45 ? 'now' : s < 3600 ? `${Math.round(s / 60)}m` : `${Math.round(s / 3600)}h`
 }
 
-function Toggle({ label, on, set }: { label: string; on: boolean; set: (v: boolean) => void }) {
-  return (
-    <button
-      role="switch"
-      aria-checked={on}
-      onClick={() => set(!on)}
-      className={cn(
-        'flex h-[52px] flex-col justify-between rounded-[10px] border p-2.5 text-left transition-colors',
-        on ? 'border-accent/35 bg-accent/[0.09]' : 'border-line bg-white/[0.025] hover:bg-white/[0.05]',
-      )}
-    >
-      <span className={cn('size-1.5 rounded-full transition-colors', on ? 'bg-accent' : 'bg-white/20')} />
-      <span className={cn('text-[11.5px] leading-none', on ? 'text-ink' : 'text-dim')}>{label}</span>
-    </button>
-  )
-}
-
 function ControlCentre() {
   const prefs = usePrefs()
   const history = useNotices((s) => s.history)
@@ -98,13 +81,7 @@ function ControlCentre() {
 
   return (
     <motion.div {...pop} className="glass absolute right-0 top-[calc(100%+7px)] w-[320px] origin-top-right rounded-2xl p-3">
-      <div className="grid grid-cols-3 gap-2">
-        <Toggle label="Scanlines" on={prefs.scanlines} set={(v) => prefs.set('scanlines', v)} />
-        <Toggle label="Film grain" on={prefs.grain} set={(v) => prefs.set('grain', v)} />
-        <Toggle label="Less motion" on={prefs.reduceMotion} set={(v) => prefs.set('reduceMotion', v)} />
-      </div>
-
-      <div className="mt-2 rounded-[10px] border border-line bg-white/[0.025] p-2.5">
+      <div className="rounded-[10px] border border-line bg-white/[0.025] p-2.5">
         <div className="flex items-center justify-between">
           <span className="label">Accent</span>
           <div className="flex gap-1.5">

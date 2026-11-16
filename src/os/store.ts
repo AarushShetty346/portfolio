@@ -167,10 +167,7 @@ export const WALLPAPERS: Record<WallpaperId, { name: string; note: string }> = {
 interface Prefs {
   wallpaper: WallpaperId
   accent: AccentId
-  scanlines: boolean
-  grain: boolean
   bootOnStart: boolean
-  reduceMotion: boolean
   clock24: boolean
   dockMagnify: boolean
   showWidgets: boolean
@@ -181,10 +178,7 @@ interface Prefs {
 const DEFAULT_PREFS = {
   wallpaper: 'city' as WallpaperId,
   accent: 'cyan' as AccentId,
-  scanlines: true,
-  grain: true,
   bootOnStart: true,
-  reduceMotion: false,
   clock24: false,
   dockMagnify: true,
   showWidgets: true,

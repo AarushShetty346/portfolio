@@ -161,11 +161,6 @@ export default function Settings() {
               </div>
               <p className="mt-3 text-[12px] text-faint">Project apps keep their own colours.</p>
             </Group>
-
-            <Group title="Screen texture">
-              <Toggle label="Scanlines" note="Faint horizontal lines across the display" value={prefs.scanlines} onChange={(v) => prefs.set('scanlines', v)} />
-              <Toggle label="Film grain" note="Subtle noise over the wallpaper" value={prefs.grain} onChange={(v) => prefs.set('grain', v)} />
-            </Group>
           </>
         )}
 
@@ -176,8 +171,7 @@ export default function Settings() {
               <Toggle label="Dock magnification" note="Icons grow as the pointer moves across the dock" value={prefs.dockMagnify} onChange={(v) => prefs.set('dockMagnify', v)} />
               <Toggle label="24-hour clock" value={prefs.clock24} onChange={(v) => prefs.set('clock24', v)} />
             </Group>
-            <Group title="Motion and startup">
-              <Toggle label="Reduce motion" note="Stills the wallpaper and shortens transitions" value={prefs.reduceMotion} onChange={(v) => prefs.set('reduceMotion', v)} />
+            <Group title="Startup">
               <Toggle label="Boot sequence" note="Play the startup animation on the first visit of a session" value={prefs.bootOnStart} onChange={(v) => prefs.set('bootOnStart', v)} />
             </Group>
             <button

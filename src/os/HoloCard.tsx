@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Mail } from 'lucide-react'
 import { profile } from '../data/profile'
 import { GitHubMark, LinkedInMark, OsMark } from './icons'
-import { usePrefs } from './store'
 
 /* ------------------------------------------------------------------
    Holographic ID card.
@@ -59,13 +58,12 @@ function Foil() {
 export function HoloCard({ width = 230, className }: { width?: number; className?: string }) {
   const stage = useRef<HTMLDivElement>(null)
   const card = useRef<HTMLDivElement>(null)
-  const reduce = usePrefs((s) => s.reduceMotion)
   const api = useRef({ flip: () => {} })
 
   useEffect(() => {
     const el = card.current!
     const box = stage.current!
-    const still = reduce || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let ry = -18, rx = 6, vy = 0, snap = 0
     let hx = 0, hy = 0, hovering = false
     let dragging = false, moved = 0, lastX = 0
@@ -142,7 +140,7 @@ export function HoloCard({ width = 230, className }: { width?: number; className
       box.removeEventListener('pointerenter', enter)
       box.removeEventListener('pointerleave', leave)
     }
-  }, [reduce])
+  }, [])
 
   const rows: [string, string][] = [
     ['Base', `${profile.school}, ${profile.location}`],
