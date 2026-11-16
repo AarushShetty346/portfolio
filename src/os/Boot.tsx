@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
+import { isPhone } from './device'
 import { OsMark } from './icons'
 
 const STEPS = ['Waking display', 'Mounting projects', 'Linking GitHub', 'Starting window manager', 'Ready']
@@ -35,7 +36,7 @@ export function Boot({ onDone }: { onDone: () => void }) {
       />
       <div className="scanlines absolute inset-0" />
 
-      <div className="relative flex w-[320px] flex-col items-center">
+      <div className="relative flex w-[320px] max-w-[78vw] flex-col items-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.7, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -45,7 +46,7 @@ export function Boot({ onDone }: { onDone: () => void }) {
           <OsMark size={64} />
         </motion.div>
 
-        <div className="display mt-7 flex text-[26px] font-semibold tracking-[0.34em] text-ink">
+        <div className="display mt-7 flex pl-[0.34em] text-[22px] font-semibold tracking-[0.34em] text-ink sm:text-[26px]">
           {'AARUSH.OS'.split('').map((ch, i) => (
             <motion.span
               key={i}
@@ -76,7 +77,7 @@ export function Boot({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
-      <div className="absolute bottom-8 font-mono text-[11px] tracking-wider text-faint">Press any key to skip</div>
+      <div className="absolute bottom-8 font-mono text-[11px] tracking-wider text-faint">{isPhone() ? 'Tap to skip' : 'Press any key to skip'}</div>
     </motion.div>
   )
 }

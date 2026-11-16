@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
 import { APPS, openApp, openProject } from './apps'
+import { usePhone } from './device'
 import { AppIcon, cn, glyphFor } from './icons'
 import { profile } from '../data/profile'
 import { HoloCard } from './HoloCard'
@@ -199,6 +200,86 @@ function Readout() {
   )
 }
 
+/** Phones get a home screen instead of a desktop: who this is, every app one tap away, pinned work below. */
+function PhoneHome() {
+  const now = useNow(30000)
+  const h = now.getHours()
+  const greeting = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+  const pinned = projects.filter((p) => p.featured).slice(0, 4)
+  const ease = [0.16, 1, 0.3, 1] as const
+
+  return (
+    <div className="os-scroll absolute inset-x-0 bottom-0 top-[38px] px-5 pb-[116px] pt-6 [scrollbar-width:none]">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.7, ease }}
+        className="mx-auto flex max-w-[460px] items-center gap-5"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink/55">
+            <span className="h-px w-5 bg-accent" />
+            Portfolio
+          </div>
+          <h1 className="display mt-2.5 text-[29px] font-light leading-[1.04] tracking-[-0.01em] text-ink [text-shadow:0_2px_30px_rgb(0_0_0/0.7)]">
+            {greeting}.
+          </h1>
+          <p className="mt-2 text-[13px] leading-relaxed text-ink/70 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)]">{profile.headline}</p>
+          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-ink/75">
+            <span className="size-1.5 rounded-full bg-term" />
+            Open to internships
+          </div>
+        </div>
+        <HoloCard width={112} className="shrink-0" />
+      </motion.div>
+
+      <div className="mx-auto mt-8 grid max-w-[460px] grid-cols-4 gap-y-4">
+        {APPS.map((a, i) => (
+          <motion.button
+            key={a.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 + i * 0.04, duration: 0.5, ease }}
+            onClick={() => openApp(a.id)}
+            className="flex flex-col items-center gap-1.5 active:scale-95"
+          >
+            <AppIcon icon={a.icon} color={a.color} size={54} />
+            <span className="text-[11px] font-medium text-ink/90 [text-shadow:0_1px_8px_rgb(0_0_0),0_0_2px_rgb(0_0_0)]">
+              {a.name.replace('System ', '')}
+            </span>
+          </motion.button>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.6, ease }}
+        className="glass mx-auto mt-8 max-w-[460px] overflow-hidden rounded-[16px]"
+      >
+        <div className="flex h-9 items-center justify-between border-b border-white/[0.07] px-3.5">
+          <span className="label !text-ink/60">Pinned projects</span>
+          <button onClick={() => openApp('projects')} className="text-[11px] text-accent">See all</button>
+        </div>
+        {pinned.map((p) => (
+          <button
+            key={p.slug}
+            onClick={() => openProject(p.slug)}
+            className="flex w-full items-center gap-3 border-b border-white/[0.06] px-3.5 py-2.5 text-left last:border-b-0 active:bg-white/[0.06]"
+          >
+            <AppIcon icon={glyphFor(p.glyph)} color={p.accent} color2={p.accent2} variant="project" size={36} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-medium text-ink">{p.name}</span>
+              <span className="block truncate text-[11.5px] text-dim">{p.tagline}</span>
+            </span>
+            <ArrowRight size={14} className="shrink-0 text-faint" />
+          </button>
+        ))}
+      </motion.div>
+    </div>
+  )
+}
+
 interface MenuPos { x: number; y: number }
 
 function ContextMenu({ pos, onClose }: { pos: MenuPos; onClose: () => void }) {
@@ -267,6 +348,9 @@ function ContextMenu({ pos, onClose }: { pos: MenuPos; onClose: () => void }) {
 export function DesktopSurface() {
   const showWidgets = usePrefs((s) => s.showWidgets)
   const [menu, setMenu] = useState<MenuPos | null>(null)
+  const phone = usePhone()
+
+  if (phone) return <PhoneHome />
 
   return (
     <>

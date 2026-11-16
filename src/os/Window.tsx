@@ -3,7 +3,8 @@ import { motion } from 'motion/react'
 import { Copy, Minus, Square, X } from 'lucide-react'
 import { resolveApp } from './apps'
 import { AppIcon, cn } from './icons'
-import { DOCK_SPACE, TOPBAR_H, useFocusedId, useWM, type Win } from './store'
+import { usePhone } from './device'
+import { TOPBAR_H, useFocusedId, useWM, type Win } from './store'
 
 const MIN_W = 420
 const MIN_H = 300
@@ -54,6 +55,9 @@ export function WindowFrame({ win }: { win: Win }) {
   const el = useRef<HTMLDivElement>(null)
   const sizeEl = useRef<HTMLSpanElement>(null)
   const vp = useViewport()
+  const phone = usePhone()
+  // Fullscreen covers everything under the top bar. Phones only ever show apps this way.
+  const full = win.maximized || phone
   const [snap, setSnap] = useState(false)
 
   useEffect(() => {
@@ -65,16 +69,16 @@ export function WindowFrame({ win }: { win: Win }) {
 
   // Keep windows reachable when the browser is resized.
   useEffect(() => {
-    if (win.maximized) return
+    if (full) return
     const x = clamp(win.x, 120 - win.w, vp.w - 120)
     const y = clamp(win.y, TOPBAR_H, vp.h - 80)
     if (x !== win.x || y !== win.y) setBounds(win.id, { x, y })
-  }, [vp.w, vp.h]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [vp.w, vp.h, full]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!app) return null
 
-  const b = win.maximized
-    ? { x: 0, y: TOPBAR_H, w: vp.w, h: vp.h - TOPBAR_H - DOCK_SPACE + 6 }
+  const b = full
+    ? { x: 0, y: TOPBAR_H, w: vp.w, h: vp.h - TOPBAR_H }
     : { x: win.x, y: win.y, w: win.w, h: win.h }
 
   const track = (move: (ev: PointerEvent) => void, done: () => void, cursor: string) => {
@@ -92,7 +96,7 @@ export function WindowFrame({ win }: { win: Win }) {
 
   const startDrag = (e: RPointerEvent) => {
     if (e.button !== 0 || (e.target as HTMLElement).closest('[data-nodrag]')) return
-    if (win.maximized) return
+    if (full) return
     const node = el.current!
     const sx = e.clientX, sy = e.clientY
     let nx = win.x, ny = win.y
@@ -108,7 +112,7 @@ export function WindowFrame({ win }: { win: Win }) {
   }
 
   const startResize = (dir: Dir) => (e: RPointerEvent) => {
-    if (e.button !== 0 || win.maximized) return
+    if (e.button !== 0 || full) return
     e.stopPropagation()
     const node = el.current!
     const sx = e.clientX, sy = e.clientY
@@ -165,14 +169,14 @@ export function WindowFrame({ win }: { win: Win }) {
           aria-label={app.title}
           className="win"
           data-focused={focused}
-          data-max={win.maximized}
+          data-max={full}
           style={{ '--app': app.color } as CSSProperties}
         >
           <header
             className="win-bar flex h-11 shrink-0 items-center gap-3 pl-3.5 pr-2.5"
             onPointerDown={startDrag}
             onDoubleClick={(e) => {
-              if (!(e.target as HTMLElement).closest('[data-nodrag]')) toggleMaximize(win.id)
+              if (!phone && !(e.target as HTMLElement).closest('[data-nodrag]')) toggleMaximize(win.id)
             }}
           >
             <AppIcon icon={app.icon} color={app.color} color2={app.color2} variant={app.variant} size={22} />
@@ -184,26 +188,29 @@ export function WindowFrame({ win }: { win: Win }) {
                 {app.subtitle}
               </span>
             </div>
-            <div className="ml-auto flex items-center gap-1.5" data-nodrag>
+            <div className={cn('ml-auto flex items-center gap-1.5', phone && '[&>.win-key]:h-8 [&>.win-key]:w-10')} data-nodrag>
               <button type="button" className="win-key" aria-label="Minimize" title="Minimize" onClick={() => minimize(win.id)}>
                 <Minus size={13} />
               </button>
-              <button type="button" className="win-key" aria-label={win.maximized ? 'Restore' : 'Maximize'} title={win.maximized ? 'Restore' : 'Maximize'} onClick={() => toggleMaximize(win.id)}>
-                {win.maximized ? <Copy size={11} /> : <Square size={10} />}
-              </button>
+              {!phone && (
+                <button type="button" className="win-key" aria-label={win.maximized ? 'Exit fullscreen' : 'Fullscreen'} title={win.maximized ? 'Exit fullscreen' : 'Fullscreen'} onClick={() => toggleMaximize(win.id)}>
+                  {win.maximized ? <Copy size={11} /> : <Square size={10} />}
+                </button>
+              )}
               <button type="button" className="win-key" data-danger aria-label="Close" title="Close" onClick={() => close(win.id)}>
                 <X size={13} />
               </button>
             </div>
           </header>
 
-          <div className={cn('relative min-h-0 flex-1 transition-opacity duration-300', !focused && 'opacity-[0.82]')}>
+          {/* apps lay themselves out against this box (@.../win), so they adapt to narrow windows and phones */}
+          <div className={cn('@container/win relative min-h-0 flex-1 transition-opacity duration-300', !focused && 'opacity-[0.82]')}>
             <Suspense fallback={<AppLoading title={app.title} />}>
               <App win={win} />
             </Suspense>
           </div>
 
-          <footer className="win-foot flex h-[22px] shrink-0 items-center justify-between px-3.5">
+          <footer className={cn('win-foot h-[22px] shrink-0 items-center justify-between px-3.5', phone ? 'hidden' : 'flex')}>
             <span className="flex items-center gap-2">
               <span className="size-1.5 rounded-full" style={{ background: focused ? 'var(--app)' : 'rgb(255 255 255 / 0.2)' }} />
               aarush.os / {app.title.toLowerCase()}
@@ -212,7 +219,7 @@ export function WindowFrame({ win }: { win: Win }) {
           </footer>
         </section>
 
-        {!win.maximized &&
+        {!full &&
           HANDLES.map((h) => (
             <div key={h.dir} className={cn('absolute', h.cls)} onPointerDown={startResize(h.dir)} />
           ))}

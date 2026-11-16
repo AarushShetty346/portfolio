@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
 import { APPS, openApp, openProject, resolveApp } from './apps'
 import { DesktopSurface } from './DesktopSurface'
+import { isPhone } from './device'
 import { Dock } from './Dock'
 import { Launcher } from './Launcher'
 import { notify, useFocusedId, useNotices, useShell, useWM } from './store'
@@ -14,7 +15,7 @@ function Notifications() {
   const items = useNotices((s) => s.items)
   const dismiss = useNotices((s) => s.dismiss)
   return (
-    <div className="pointer-events-none absolute right-4 top-[50px] z-[8000] flex w-[320px] flex-col gap-2">
+    <div className="pointer-events-none absolute right-4 top-[50px] z-[8000] flex w-[320px] max-w-[calc(100vw-2rem)] flex-col gap-2">
       <AnimatePresence initial={false}>
         {items.map((n) => {
           const Icon = n.tone === 'ok' ? CircleCheck : n.tone === 'warn' ? CircleAlert : Info
@@ -127,7 +128,7 @@ export function Desktop() {
   useEffect(() => {
     if (sessionStorage.getItem('aarush-os:welcomed')) return
     sessionStorage.setItem('aarush-os:welcomed', '1')
-    const t = window.setTimeout(() => notify('Welcome to AARUSH.OS', 'Open Projects from the dock, or press Ctrl K to search.'), 900)
+    const t = window.setTimeout(() => notify('Welcome to AARUSH.OS', isPhone() ? 'Tap an app to open it.' : 'Open Projects from the dock, or press Ctrl K to search.'), 900)
     return () => window.clearTimeout(t)
   }, [])
 

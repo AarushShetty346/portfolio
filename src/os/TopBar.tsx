@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Bell, Check, Search, Wifi, WifiOff } from 'lucide-react'
 import { APPS, openApp, resolveApp } from './apps'
+import { usePhone } from './device'
 import { AppIcon, cn, OsMark } from './icons'
 import { profile } from '../data/profile'
 import { ACCENTS, notify, useFocusedId, useNotices, usePrefs, useShell, useWM, WALLPAPERS, type AccentId, type WallpaperId } from './store'
@@ -73,14 +74,14 @@ const ago = (t: number) => {
   return s < 45 ? 'now' : s < 3600 ? `${Math.round(s / 60)}m` : `${Math.round(s / 3600)}h`
 }
 
-function ControlCentre() {
+function ControlCentre({ phone }: { phone: boolean }) {
   const prefs = usePrefs()
   const history = useNotices((s) => s.history)
   const clearHistory = useNotices((s) => s.clearHistory)
   const wallpapers = Object.keys(WALLPAPERS) as WallpaperId[]
 
   return (
-    <motion.div {...pop} className="glass absolute right-0 top-[calc(100%+7px)] w-[320px] origin-top-right rounded-2xl p-3">
+    <motion.div {...pop} className={cn('glass origin-top-right rounded-2xl p-3', phone ? 'fixed inset-x-2 top-[45px]' : 'absolute right-0 top-[calc(100%+7px)] w-[320px]')}>
       <div className="rounded-[10px] border border-line bg-white/[0.025] p-2.5">
         <div className="flex items-center justify-between">
           <span className="label">Accent</span>
@@ -154,6 +155,7 @@ export function TopBar() {
   const now = useNow()
   const online = useOnline()
   const [open, setOpen] = useState<string | null>(null)
+  const phone = usePhone()
 
   useEffect(() => {
     if (!open) return
@@ -175,6 +177,13 @@ export function TopBar() {
 
   const menus: Record<string, Item[]> = {
     system: [
+      ...(phone
+        ? [
+            { label: 'Home screen', disabled: none, run: () => windows.forEach((w) => wm.minimize(w.id)) },
+            { label: 'Search', run: () => setLauncher(true) },
+            null,
+          ]
+        : []),
       { label: 'About this system', run: () => openApp('about') },
       { label: 'Settings', run: () => openApp('settings') },
       { label: 'System Monitor', run: () => openApp('monitor') },
@@ -247,7 +256,7 @@ export function TopBar() {
         'system',
         <>
           <OsMark size={15} />
-          <span className="display text-[11.5px] font-semibold tracking-[0.24em] text-ink">AARUSH<span className="text-accent">.</span>OS</span>
+          {!phone && <span className="display text-[11.5px] font-semibold tracking-[0.24em] text-ink">AARUSH<span className="text-accent">.</span>OS</span>}
         </>,
         'gap-2 !px-1.5 text-accent',
       )}
@@ -261,20 +270,20 @@ export function TopBar() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.14 }}
-          className="flex items-center gap-2 px-1.5 text-[12.5px] font-semibold text-ink"
+          className="flex min-w-0 items-center gap-2 px-1.5 text-[12.5px] font-semibold text-ink"
         >
-          {focusedApp && <span className="size-1.5 rounded-full" style={{ background: focusedApp.color }} />}
-          <span className="max-w-40 truncate">{focusedApp?.title ?? 'Desktop'}</span>
+          {focusedApp && <span className="size-1.5 shrink-0 rounded-full" style={{ background: focusedApp.color }} />}
+          <span className="min-w-0 max-w-40 truncate">{focusedApp?.title ?? (phone ? 'Home' : 'Desktop')}</span>
         </motion.div>
       </AnimatePresence>
-      {menuButton('Window', 'Window')}
-      {menuButton('Go', 'Go')}
-      {menuButton('Help', 'Help')}
+      {!phone && menuButton('Window', 'Window')}
+      {!phone && menuButton('Go', 'Go')}
+      {!phone && menuButton('Help', 'Help')}
 
       {/* open windows */}
       <div className="ml-3 flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
         <AnimatePresence initial={false}>
-          {windows.map((w) => {
+          {(phone ? [] : windows).map((w) => {
             const app = resolveApp(w)
             if (!app) return null
             const active = w.id === focusedId
@@ -305,11 +314,12 @@ export function TopBar() {
       {/* status */}
       <button
         onClick={() => setLauncher(true)}
-        className="flex h-[26px] items-center gap-2 rounded-md border border-white/8 bg-white/[0.03] pl-2 pr-1.5 text-[11.5px] text-dim transition-colors hover:bg-white/8 hover:text-ink"
+        aria-label="Search"
+        className={cn('flex h-[26px] items-center gap-2 rounded-md text-[11.5px] text-dim transition-colors hover:bg-white/8 hover:text-ink', phone ? 'w-8 justify-center' : 'border border-white/8 bg-white/[0.03] pl-2 pr-1.5')}
       >
-        <Search size={12} />
-        <span>Search</span>
-        <kbd className="rounded bg-white/8 px-1 font-mono text-[9.5px] text-faint">Ctrl K</kbd>
+        <Search size={phone ? 13.5 : 12} />
+        {!phone && <span>Search</span>}
+        {!phone && <kbd className="rounded bg-white/8 px-1 font-mono text-[9.5px] text-faint">Ctrl K</kbd>}
       </button>
 
       <div
@@ -329,16 +339,16 @@ export function TopBar() {
           <Bell size={13.5} />
           {unread > 0 && open !== 'cc' && <span className="absolute right-[7px] top-[5px] size-[6px] rounded-full bg-accent ring-2 ring-[#090a10]" />}
         </button>
-        <AnimatePresence>{open === 'cc' && <ControlCentre />}</AnimatePresence>
+        <AnimatePresence>{open === 'cc' && <ControlCentre phone={phone} />}</AnimatePresence>
       </div>
 
       <div className="mx-1 h-3.5 w-px bg-white/12" />
 
       <button
         onClick={() => openApp('monitor')}
-        className="flex h-[26px] items-center gap-2.5 rounded-md px-2 text-[12px] transition-colors hover:bg-white/8"
+        className="flex h-[26px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-md px-2 text-[12px] transition-colors hover:bg-white/8"
       >
-        <span className="text-dim">{now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+        {!phone && <span className="text-dim">{now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
         <span className="font-medium tabular-nums text-ink">{formatTime(now, clock24)}</span>
       </button>
     </div>

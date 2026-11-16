@@ -1,13 +1,16 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useAnimationControls, useMotionValue, useSpring, useTransform, type MotionValue } from 'motion/react'
 import { APPS, openApp, resolveApp, type ResolvedApp } from './apps'
-import { AppIcon } from './icons'
+import { usePhone } from './device'
+import { AppIcon, cn } from './icons'
 import { useFocusedId, usePrefs, useWM } from './store'
 
 const BASE = 48
 const PEAK = 74
 const REACH = 150
 const FAR = 99999
+/** Phones have room for four: the rest live on the home screen. */
+const PHONE_DOCK = ['projects', 'about', 'resume', 'contact']
 
 interface ItemProps {
   app: ResolvedApp
@@ -15,10 +18,12 @@ interface ItemProps {
   running: boolean
   active: boolean
   hint?: string
+  /** Touch screens get no hover label. */
+  quiet?: boolean
   onClick: () => void
 }
 
-function DockItem({ app, mouseX, running, active, hint, onClick }: ItemProps) {
+function DockItem({ app, mouseX, running, active, hint, quiet, onClick }: ItemProps) {
   const ref = useRef<HTMLButtonElement>(null)
   const [hover, setHover] = useState(false)
   const [pulse, setPulse] = useState(0)
@@ -83,7 +88,7 @@ function DockItem({ app, mouseX, running, active, hint, onClick }: ItemProps) {
       </motion.div>
 
       <AnimatePresence>
-        {hover && (
+        {hover && !quiet && (
           <motion.span
             initial={{ opacity: 0, y: 6, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -125,24 +130,42 @@ export function Dock() {
     else focus(id)
   }
 
-  const projectWins = windows.filter((w) => w.appId === 'project')
+  const phone = usePhone()
+  const projectWins = phone ? [] : windows.filter((w) => w.appId === 'project')
+  const apps = phone ? APPS.filter((a) => PHONE_DOCK.includes(a.id)) : APPS
+
+  // A fullscreen app takes the whole screen under the top bar, so the dock steps aside.
+  // On a desktop it comes back while the pointer rests on the bottom edge.
+  const focused = windows.find((w) => w.id === focusedId)
+  const covered = phone ? !!focused : !!focused?.maximized
+  const [peek, setPeek] = useState(false)
+  useEffect(() => {
+    if (!covered) setPeek(false)
+  }, [covered])
+  const hidden = covered && !peek
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-3.5 z-[4000] flex justify-center">
+    <div
+      className={cn('absolute inset-x-0 bottom-0 z-[4000] flex h-[104px] items-end justify-center pb-3.5', peek ? 'pointer-events-auto' : 'pointer-events-none')}
+      onPointerLeave={() => setPeek(false)}
+    >
+      {covered && !phone && !peek && (
+        <div className="pointer-events-auto absolute inset-x-0 bottom-0 h-1.5" onPointerEnter={() => setPeek(true)} />
+      )}
       <motion.div
         initial={{ y: 96, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 210, damping: 25, delay: 0.15 }}
-        onPointerMove={(e) => magnify && mouseX.set(e.clientX)}
+        animate={hidden ? { y: 110, opacity: 0 } : { y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+        onPointerMove={(e) => magnify && !phone && mouseX.set(e.clientX)}
         onPointerLeave={() => mouseX.set(FAR)}
-        className="pointer-events-auto relative"
+        className={cn('relative', hidden ? 'pointer-events-none' : 'pointer-events-auto')}
       >
         {/* the tray is its own layer so icons can rise out of it */}
         <div className="glass absolute inset-0 rounded-[22px]" />
         <div className="pointer-events-none absolute inset-x-6 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent)' }} />
 
         <div className="relative flex h-[70px] items-start gap-2 px-3 pt-[10px]">
-          {APPS.map((a, i) => (
+          {apps.map((a, i) => (
             <DockItem
               key={a.id}
               app={resolveApp({ appId: a.id })!}
@@ -150,6 +173,7 @@ export function Dock() {
               running={windows.some((w) => w.id === a.id)}
               active={focusedId === a.id}
               hint={`Alt ${i + 1}`}
+              quiet={phone}
               onClick={() => toggle(a.id, () => openApp(a.id))}
             />
           ))}
