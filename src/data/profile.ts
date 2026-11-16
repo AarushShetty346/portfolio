@@ -18,7 +18,12 @@ export const profile = {
   headline: 'I build full-stack products, AI agents and tools that make data easy to see.',
 
   /** About paragraphs. Leave empty to show the "write-up pending" slot. */
-  bio: [] as string[],
+  bio: [
+    'I am a Computer Science student at VIT Vellore, graduating in 2028. I like building things end to end: the server, the interface, the tests and the deployment.',
+    'Most of what I have built sits in three areas: tools for AI agents and code (ASTFLOW, RelayRoom), voice products for India (Shikshak, ScamLingo), and software that makes data easy to explore (Lap by Lap, Compiler Visualizer).',
+    'I care about measuring things properly. If I say something got faster or more accurate, there is a benchmark behind it. I also contribute to open source, with 12 pull requests merged into Checkstyle.',
+    'I am looking for a software engineering internship for summer 2027.',
+  ] as string[],
 
   interests: ['Full-stack web', 'Voice AI', 'AI agents', 'Data visualisation', 'Networks'],
 
